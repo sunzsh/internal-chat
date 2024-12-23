@@ -201,3 +201,47 @@ pre {
   background: #5beff2d8;
   transition: width 0.3s ease;
 }
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px 20px 20px;
+}
+
+.controls button {
+  padding: 10px 20px;
+  background-color: #5beff2d8;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #000;
+}
+
+.controls button:hover {
+  background-color: #4bd8e6d8;
+}
+
+.controls input[type="file"] {
+  display: none;
+}
+
+audio {
+  width: 220px;
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  transform: scaleY(0.5);
+  transform-origin: top left;
+}
+
+/* 通过私有选择器调整控制栏背景，仅在部分浏览器有效 */
+audio::-webkit-media-controls-panel {
+  background-color: #4bd8e6d8;
+}
+audio::-webkit-media-controls-play-button {
+  background-color: transparent;
+  border-radius: 50%;
+}
+audio::-webkit-media-controls-timeline {
+  background-color: rgba(255, 255, 255, 0.2);
+}

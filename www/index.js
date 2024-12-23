@@ -8,9 +8,14 @@ function addLinkItem(uid, file) {
   const chatBox = document.querySelector('.chat-wrapper');
   const chatItem = document.createElement('div');
   chatItem.className = 'chat-item';
+  const audioExtensions = ['.ogg', '.mp3', '.wav', '.m4a'];
+  const fileLowerName = file.name.toLowerCase();
+  const isAudioMessage = audioExtensions.some(ext => fileLowerName.endsWith(ext));
   chatItem.innerHTML = `
     <div class="chat-item_user">${uid === me.id ? '（我）': ''}${uid} :</div>
-    <div class="chat-item_content"><a class="file" href="${file.url}" download="${file.name}">[文件] ${file.name}</a></div>
+    <div class="chat-item_content">
+      ${isAudioMessage ? `<audio controls src="${file.url}"></audio>` : `<a class="file" href="${file.url}" download="${file.name}">[文件] ${file.name}</a>`}
+    </div>
   `;
   chatBox.appendChild(chatItem);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -77,7 +82,7 @@ async function sendFile(file) {
       };
       
       await user.sendFile(fileInfo, file, onProgress);
-      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${user.id})`);
+      addLinkItem(me.id, { url: URL.createObjectURL(file), name: fileInfo.name });
     } catch (error) {
       console.error('发送文件失败:', error);
       alert('发送文件失败，请重试');
@@ -313,8 +318,9 @@ async function confirmSendFile() {
         
         await user.sendFile(fileInfo, pendingFile, onProgress);
       }
-      
-      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${selectedUsers.map(u => u.id).join(', ')})`);
+            // 成功或失败后在本地显示文件链接或播放组件
+	  addLinkItem(me.id, { url: URL.createObjectURL(pendingFile), name: fileInfo.name });
+      //addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${selectedUsers.map(u => u.id).join(', ')})`);
     } catch (error) {
       console.error('发送文件失败:', error);
       alert('发送文件失败，请重试');
@@ -331,3 +337,46 @@ async function confirmSendFile() {
   modal.style.display = 'none';
   pendingFile = null;
 }
+
+async function sendVoiceMessage(blob) {
+  const file = new File([blob], 'voice_message.ogg', { type: 'audio/ogg; codecs=opus' });
+  await sendFile(file);
+}
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(stream => {
+    const mediaRecorder = new MediaRecorder(stream);
+    const recordButton = document.getElementById('recordButton');
+    let chunks = [];
+
+    recordButton.addEventListener('mousedown', () => {
+      mediaRecorder.start();
+    });
+
+    recordButton.addEventListener('mouseup', () => {
+      mediaRecorder.stop();
+    });
+
+    mediaRecorder.ondataavailable = event => {
+      chunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
+      chunks = [];
+      sendVoiceMessage(blob);
+    };
+  })
+  .catch(error => {
+    console.error('无法访问麦克风:', error);
+  });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const recordButton = document.getElementById('recordButton');
+  recordButton.addEventListener('mousedown', () => {
+    // 开始录音
+  });
+  recordButton.addEventListener('mouseup', () => {
+    // 停止录音
+  });
+});
