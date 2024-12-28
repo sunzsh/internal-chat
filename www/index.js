@@ -1,4 +1,4 @@
-const wsUrl = 'wss://neiwang.1024bugs.com/ws';
+const wsUrl = 'wss://dat6.com/ws';
 
 var users = [];
 var me = new XChatUser();
