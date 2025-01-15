@@ -1,5 +1,8 @@
 const WebSocket = require('ws');
 const service = require('./data');
+const http = require('http');
+const express = require('express');
+const path = require('path');
 
 const originalLog = console.log;
 console.log = function() {
@@ -14,7 +17,15 @@ console.log = function() {
 
 // 接收启动参数作为端口号，默认8081
 const PORT = process.argv[2] || 8081;
-const server = new WebSocket.Server({ port: PORT });
+
+// 启用Express Web服务
+const app = express();
+app.use(express.static(path.join(__dirname, '../www')));
+const serverWeb = http.createServer(app);
+serverWeb.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});
+const server = new WebSocket.Server({ server: serverWeb, path: '/ws' });
 
 const SEND_TYPE_REG = '1001'; // 注册后发送用户id
 const SEND_TYPE_ROOM_INFO = '1002'; // 发送房间信息
@@ -127,9 +138,9 @@ function socketSend_UserId(socket, id) {
   send(socket, SEND_TYPE_REG, { id });
 }
 function socketSend_RoomInfo(socket, ip, currentId) {
-  const result = service.getUserList(ip).map(user => ({ 
+  const result = service.getUserList(ip).map(user => ({
     id: user.id,
-    nickname: user.nickname 
+    nickname: user.nickname
   }));
   send(socket, SEND_TYPE_ROOM_INFO, result);
 }
