@@ -1,3 +1,8 @@
+# 基于原项目改动点
+- server端增加启动网页服务器，和ws同一端口，不用单独部署web端
+- 增加push到master后自动打包到dockerhub（build-and-push.yml中DOCKERHUB_USERNAME和DOCKERHUB_TOKEN分别是hub的账号密码，需要在actions中secrets配置这两个变量）
+- 上面两点看不懂不用管直接docker跑起来```docker run -d -p 8081:8081 smanx/internal-chat```
+
 # 发个东西
 一个局域网文字/文件P2P传输工具
 > 项目中仅在线用户列表和WebRTC信令迫不得已需要一个轻量化的服务，其他数据传输都采用了基于WebRTC的点对点传输，不经过中间服务器，所以局域网内互传一些文字/文件都比较快。
