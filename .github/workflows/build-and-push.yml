@@ -1,0 +1,36 @@
+name: Build and Push Multi-arch Docker Image
+
+# 定义触发条件，比如代码推送到main分支时触发
+on:
+  push:
+    branches:
+      - master
+
+# 定义工作流中的作业
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    # 设置环境变量
+    env:
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/internal-chat
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # 定义作业中的步骤
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 设置Docker构建环境
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # 登录DockerHub
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      # 构建Docker镜像（支持多平台）
+      - name: Build Docker image for multiple platforms
+        run: docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME . --push
