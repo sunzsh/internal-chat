@@ -1,4 +1,4 @@
-const wsUrl = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+let wsUrl = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
 wsUrl += window.location.host + '/ws';
 
 var users = [];
