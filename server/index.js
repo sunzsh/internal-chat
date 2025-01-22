@@ -41,6 +41,9 @@ server.on('connection', (socket, request) => {
   if (urlWithPath.length > 1 && urlWithPath[1].length > 0 && urlWithPath[1].length <= 32) {
     roomId = urlWithPath[1];
   }
+  if (roomId === 'ws') {  // 兼容旧版本
+    roomId = null;
+  }
   const currentId = service.registerUser(ip, roomId, socket);
   // 向客户端发送自己的id
   socketSend_UserId(socket, currentId);
