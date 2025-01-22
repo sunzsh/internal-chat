@@ -13,8 +13,9 @@ console.log = function() {
 };
 
 // 接收启动参数作为端口号，默认8081
-const PORT = process.argv[2] || 8081;
-const server = new WebSocket.Server({ port: PORT });
+const HOST = process.argv[2] || "localhost"
+const PORT = process.argv[3] || 8081;
+const server = new WebSocket.Server({ port: PORT, host: HOST });
 
 const SEND_TYPE_REG = '1001'; // 注册后发送用户id
 const SEND_TYPE_ROOM_INFO = '1002'; // 发送房间信息
@@ -31,7 +32,7 @@ const RECEIVE_TYPE_KEEPALIVE = '9999'; // keep-alive
 const RECEIVE_TYPE_UPDATE_NICKNAME = '9004'; // 更新昵称请求
 
 
-console.log(`Signaling server running on ws://localhost:${PORT}`);
+console.log(`Signaling server running on ws://${HOST}:${PORT}`);
 
 server.on('connection', (socket, request) => {
   const ip = request.headers['x-forwarded-for'] ?? request.headers['x-real-ip'] ?? socket._socket.remoteAddress.split("::ffff:").join("");
