@@ -1,6 +1,6 @@
 const PRTOCOL = 'wss'; // or ws: not use TLS
 const HOST = 'fagedongxi.com'; // intermediate server host
-const PORT = 8081; // intermediate server port
+const PORT = 443; // intermediate server port
 const PATH = '/ws' // websocket path
 
 // final wsUrl
