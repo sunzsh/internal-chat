@@ -99,6 +99,16 @@ server.on('connection', (socket, request) => {
     }
 
     const { targetId, type, data } = message;
+    if (type === RECEIVE_TYPE_UPDATE_NICKNAME) {
+      const success = service.updateNickname(ip, roomId, currentId, data.nickname);
+      if (success) {
+        // 通知所有用户昵称更新
+        service.getUserList(ip, roomId).forEach(user => {
+          socketSend_NicknameUpdated(user.socket, { id: currentId, nickname: data.nickname });
+        });
+      }
+      return;
+    }
     if (!type || !targetId) {
       return null;
     }
@@ -120,16 +130,6 @@ server.on('connection', (socket, request) => {
       return;
     }
     if (type === RECEIVE_TYPE_KEEPALIVE) {
-      return;
-    }
-    if (type === RECEIVE_TYPE_UPDATE_NICKNAME) {
-      const success = service.updateNickname(ip, roomId, currentId, data.nickname);
-      if (success) {
-        // 通知所有用户昵称更新
-        service.getUserList(ip, roomId).forEach(user => {
-          socketSend_NicknameUpdated(user.socket, { id: currentId, nickname: data.nickname });
-        });
-      }
       return;
     }
     
