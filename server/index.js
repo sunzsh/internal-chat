@@ -102,9 +102,8 @@ server.on('connection', (socket, request) => {
     if (!type || !targetId) {
       return null;
     }
-    const me = service.getUser(ip, roomId, currentId)
     const target = service.getUser(ip, roomId, targetId)
-    if (!me || !target) {
+    if (!target) {
       return;
     }
 
