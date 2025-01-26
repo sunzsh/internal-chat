@@ -101,39 +101,38 @@ server.on('connection', (socket, request) => {
       message = null;
     }
 
-    const { uid, targetId, type, data } = message;
-    if (!type || !uid || !targetId) {
+    const { targetId, type, data } = message;
+    if (type === RECEIVE_TYPE_UPDATE_NICKNAME) {
+      const success = service.updateNickname(ip, roomId, currentId, data.nickname);
+      if (success) {
+        // 通知所有用户昵称更新
+        service.getUserList(ip, roomId).forEach(user => {
+          socketSend_NicknameUpdated(user.socket, { id: currentId, nickname: data.nickname });
+        });
+      }
+      return;
+    }
+    if (!type || !targetId) {
       return null;
     }
-    const me = service.getUser(ip, roomId, uid)
     const target = service.getUser(ip, roomId, targetId)
-    if (!me || !target) {
+    if (!target) {
       return;
     }
 
     if (type === RECEIVE_TYPE_NEW_CANDIDATE) {
-      socketSend_Candidate(target.socket, { targetId: uid, candidate: data.candidate });
+      socketSend_Candidate(target.socket, { targetId: currentId, candidate: data.candidate });
       return;
     }
     if (type === RECEIVE_TYPE_NEW_CONNECTION) {
-      socketSend_ConnectInvite(target.socket, { targetId: uid, offer: data.targetAddr });
+      socketSend_ConnectInvite(target.socket, { targetId: currentId, offer: data.targetAddr });
       return;
     }
     if (type === RECEIVE_TYPE_CONNECTED) {
-      socketSend_Connected(target.socket, { targetId: uid, answer: data.targetAddr });
+      socketSend_Connected(target.socket, { targetId: currentId, answer: data.targetAddr });
       return;
     }
     if (type === RECEIVE_TYPE_KEEPALIVE) {
-      return;
-    }
-    if (type === RECEIVE_TYPE_UPDATE_NICKNAME) {
-      const success = service.updateNickname(ip, roomId, uid, data.nickname);
-      if (success) {
-        // 通知所有用户昵称更新
-        service.getUserList(ip, roomId).forEach(user => {
-          socketSend_NicknameUpdated(user.socket, { id: uid, nickname: data.nickname });
-        });
-      }
       return;
     }
     
