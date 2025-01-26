@@ -1,4 +1,10 @@
-const wsUrl = 'wss://fagedongxi.com/ws';
+const PRTOCOL = 'wss'; // or ws: not use TLS
+const HOST = 'fagedongxi.com'; // intermediate server host
+const PORT = 443; // intermediate server port
+const PATH = '/ws' // websocket path
+
+// final wsUrl
+const wsUrl = `${PRTOCOL}://${HOST}:${PORT}${PATH}`;
 
 var users = [];
 var me = new XChatUser();
