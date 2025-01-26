@@ -83,6 +83,26 @@ pre {
   overflow: auto;
   scroll-behavior: smooth;
 }
+
+.chat-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-wrapper::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 10px;
+  border: 2px solid #222;
+}
+
+.chat-wrapper::-webkit-scrollbar-track {
+  background-color: #222;
+  border-radius: 10px;
+}
+
+.chat-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
 .chat-item {
   display: block;
   padding: 8px 15px;

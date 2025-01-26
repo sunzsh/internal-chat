@@ -3,13 +3,13 @@ const service = require('./data');
 const path = require('path');
 
 const originalLog = console.log;
-console.log = function() {
+console.log = function () {
   const date = new Date();
   const pad = (num) => String(num).padStart(2, '0');
   const ms = String(date.getMilliseconds()).padStart(3, '0');
-  
+
   const timestamp = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${ms}`;
-  
+
   originalLog.apply(console, [`[${timestamp}]`, ...arguments]);
 };
 
@@ -32,7 +32,7 @@ const RECEIVE_TYPE_KEEPALIVE = '9999'; // keep-alive
 const RECEIVE_TYPE_UPDATE_NICKNAME = '9004'; // 更新昵称请求
 
 // 从room_pwd.json中获取房间密码
-let roomPwd = { };
+let roomPwd = {};
 try {
   // 获取可执行程序所在目录
   const exePath = process.pkg ? path.dirname(process.execPath) : __dirname;
@@ -78,15 +78,15 @@ server.on('connection', (socket, request) => {
   const currentId = service.registerUser(ip, roomId, socket);
   // 向客户端发送自己的id
   socketSend_UserId(socket, currentId, roomId, turns);
-  
+
   console.log(`${currentId}@${ip}${roomId ? '/' + roomId : ''} connected`);
-  
+
   service.getUserList(ip, roomId).forEach(user => {
     socketSend_RoomInfo(user.socket, ip, roomId);
   });
 
   socketSend_JoinedRoom(socket, currentId);
-  
+
 
   socket.on('message', (msg, isBinary) => {
     const msgStr = msg.toString();
@@ -129,14 +129,24 @@ server.on('connection', (socket, request) => {
     if (type === RECEIVE_TYPE_UPDATE_NICKNAME) {
       const success = service.updateNickname(ip, roomId, uid, data.nickname);
       if (success) {
+        // 转义HTML特殊字符函数 防止xss攻击
+        function escapeHtml(unsafe) {
+          return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+
         // 通知所有用户昵称更新
         service.getUserList(ip, roomId).forEach(user => {
-          socketSend_NicknameUpdated(user.socket, { id: uid, nickname: data.nickname });
+          socketSend_NicknameUpdated(user.socket, { id: uid, nickname: escapeHtml(data.nickname) });
         });
       }
       return;
     }
-    
+
   });
 
   socket.on('close', () => {
@@ -167,9 +177,9 @@ function socketSend_UserId(socket, id, roomId, turns) {
   send(socket, SEND_TYPE_REG, { id, roomId, turns });
 }
 function socketSend_RoomInfo(socket, ip, roomId) {
-  const result = service.getUserList(ip, roomId).map(user => ({ 
+  const result = service.getUserList(ip, roomId).map(user => ({
     id: user.id,
-    nickname: user.nickname 
+    nickname: user.nickname
   }));
   send(socket, SEND_TYPE_ROOM_INFO, result);
 }

@@ -9,8 +9,28 @@ let currentNickname = '';
 let roomPassword = ''; // 存储房间密码
 let signalingServer = null;
 
-var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+var MD5 = function (d) { var r = M(V(Y(X(d), 8 * d.length))); return r.toLowerCase() }; function M(d) { for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++)_ = d.charCodeAt(r), f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _); return f } function X(d) { for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++)_[m] = 0; for (m = 0; m < 8 * d.length; m += 8)_[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32; return _ } function V(d) { for (var _ = "", m = 0; m < 32 * d.length; m += 8)_ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255); return _ } function Y(d, _) { d[_ >> 5] |= 128 << _ % 32, d[14 + (_ + 64 >>> 9 << 4)] = _; for (var m = 1732584193, f = -271733879, r = -1732584194, i = 271733878, n = 0; n < d.length; n += 16) { var h = m, t = f, g = r, e = i; f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 0], 7, -680876936), f, r, d[n + 1], 12, -389564586), m, f, d[n + 2], 17, 606105819), i, m, d[n + 3], 22, -1044525330), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 4], 7, -176418897), f, r, d[n + 5], 12, 1200080426), m, f, d[n + 6], 17, -1473231341), i, m, d[n + 7], 22, -45705983), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 8], 7, 1770035416), f, r, d[n + 9], 12, -1958414417), m, f, d[n + 10], 17, -42063), i, m, d[n + 11], 22, -1990404162), r = md5_ff(r, i = md5_ff(i, m = md5_ff(m, f, r, i, d[n + 12], 7, 1804603682), f, r, d[n + 13], 12, -40341101), m, f, d[n + 14], 17, -1502002290), i, m, d[n + 15], 22, 1236535329), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 1], 5, -165796510), f, r, d[n + 6], 9, -1069501632), m, f, d[n + 11], 14, 643717713), i, m, d[n + 0], 20, -373897302), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 5], 5, -701558691), f, r, d[n + 10], 9, 38016083), m, f, d[n + 15], 14, -660478335), i, m, d[n + 4], 20, -405537848), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 9], 5, 568446438), f, r, d[n + 14], 9, -1019803690), m, f, d[n + 3], 14, -187363961), i, m, d[n + 8], 20, 1163531501), r = md5_gg(r, i = md5_gg(i, m = md5_gg(m, f, r, i, d[n + 13], 5, -1444681467), f, r, d[n + 2], 9, -51403784), m, f, d[n + 7], 14, 1735328473), i, m, d[n + 12], 20, -1926607734), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 5], 4, -378558), f, r, d[n + 8], 11, -2022574463), m, f, d[n + 11], 16, 1839030562), i, m, d[n + 14], 23, -35309556), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 1], 4, -1530992060), f, r, d[n + 4], 11, 1272893353), m, f, d[n + 7], 16, -155497632), i, m, d[n + 10], 23, -1094730640), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 13], 4, 681279174), f, r, d[n + 0], 11, -358537222), m, f, d[n + 3], 16, -722521979), i, m, d[n + 6], 23, 76029189), r = md5_hh(r, i = md5_hh(i, m = md5_hh(m, f, r, i, d[n + 9], 4, -640364487), f, r, d[n + 12], 11, -421815835), m, f, d[n + 15], 16, 530742520), i, m, d[n + 2], 23, -995338651), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 0], 6, -198630844), f, r, d[n + 7], 10, 1126891415), m, f, d[n + 14], 15, -1416354905), i, m, d[n + 5], 21, -57434055), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 12], 6, 1700485571), f, r, d[n + 3], 10, -1894986606), m, f, d[n + 10], 15, -1051523), i, m, d[n + 1], 21, -2054922799), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 8], 6, 1873313359), f, r, d[n + 15], 10, -30611744), m, f, d[n + 6], 15, -1560198380), i, m, d[n + 13], 21, 1309151649), r = md5_ii(r, i = md5_ii(i, m = md5_ii(m, f, r, i, d[n + 4], 6, -145523070), f, r, d[n + 11], 10, -1120210379), m, f, d[n + 2], 15, 718787259), i, m, d[n + 9], 21, -343485551), m = safe_add(m, h), f = safe_add(f, t), r = safe_add(r, g), i = safe_add(i, e) } return Array(m, f, r, i) } function md5_cmn(d, _, m, f, r, i) { return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, i)), r), m) } function md5_ff(d, _, m, f, r, i, n) { return md5_cmn(_ & m | ~_ & f, d, _, r, i, n) } function md5_gg(d, _, m, f, r, i, n) { return md5_cmn(_ & f | m & ~f, d, _, r, i, n) } function md5_hh(d, _, m, f, r, i, n) { return md5_cmn(_ ^ m ^ f, d, _, r, i, n) } function md5_ii(d, _, m, f, r, i, n) { return md5_cmn(m ^ (_ | ~f), d, _, r, i, n) } function safe_add(d, _) { var m = (65535 & d) + (65535 & _); return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m } function bit_rol(d, _) { return d << _ | d >>> 32 - _ }
 
+
+// 将原始字符函数转为HTML实体 防止xss攻击
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// 将HTML实体转为原始字符函数
+function unescapeHtmlEntities(safe) {
+  return safe
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'");
+}
 
 // 初始化页面
 function initPage() {
@@ -20,7 +40,7 @@ function initPage() {
     document.querySelector('.left').style.display = 'none';
     document.querySelector('.right').style.display = 'none';
     document.getElementById('passwordModal').style.display = 'block';
-    
+
     // 添加回车事件监听
     const passwordInput = document.getElementById('roomPasswordInput');
     passwordInput.onkeydown = (event) => {
@@ -45,19 +65,19 @@ function initPage() {
 function submitRoomPassword() {
   const passwordInput = document.getElementById('roomPasswordInput');
   roomPassword = passwordInput.value;
-  
+
   if (!roomPassword) {
     alert('请输入密码');
     return;
   } else {
     roomPassword = MD5(roomPassword);
   }
-  
+
   // 隐藏密码输入框，显示主界面
   document.getElementById('passwordModal').style.display = 'none';
   document.querySelector('.left').style.display = 'flex';
   document.querySelector('.right').style.display = 'block';
-  
+
   // 连接WebSocket
   connectWebSocket();
 }
@@ -67,18 +87,18 @@ function connectWebSocket() {
   const roomId = window.location.pathname.split('/')[1];
   const wsUrlWithPassword = wsUrl.replace(/\/$/g, '') + '/' + roomId + (roomPassword ? '/' + roomPassword : '');
   signalingServer = new WebSocket(wsUrlWithPassword);
-  
+
   signalingServer.onopen = () => {
     console.log('Connected to signaling server');
-    
+
     // 读取保存的昵称
     const match = document.cookie.match(/nickname=([^;]+)/);
     if (match) {
       currentNickname = decodeURIComponent(match[1]);
     }
-    
+
     setInterval(() => {
-      signalingServer.send(JSON.stringify({type: '9999'}));
+      signalingServer.send(JSON.stringify({ type: '9999' }));
     }, 1000 * 10);
   }
 
@@ -192,14 +212,15 @@ function addLinkItem(uid, file) {
   const chatBox = document.querySelector('.chat-wrapper');
   const chatItem = document.createElement('div');
   chatItem.className = 'chat-item';
-  
+
   const user = users.find(u => u.id === uid);
   const displayName = user?.nickname || uid;
-  
+
   chatItem.innerHTML = `
-    <div class="chat-item_user">${uid === me.id ? '（我）': ''}${displayName} :</div>
+    <div class="chat-item_user"></div>
     <div class="chat-item_content"><a class="file" href="${file.url}" download="${file.name}">[文件] ${file.name}</a></div>
   `;
+  chatItem.querySelector('.chat-item_user').textContent = `${uid === me.id ? '（我）' : ''}${unescapeHtmlEntities(displayName)} :`;
   chatBox.appendChild(chatItem);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -234,19 +255,21 @@ function addChatItem(uid, message) {
   const displayName = uid === 'system' ? '系统' : (user?.nickname || uid);
   const isSystem = uid === 'system';
 
-  const copyButton = document.createElement('button')
-  copyButton.className = 'copy-btn'
-  copyButton.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"></path></svg>'
+  const copyButton = document.createElement('button');
+  copyButton.className = 'copy-btn';
+  copyButton.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"></path></svg>';
   copyButton.onclick = function () {
-    copy(event,copyText)
+    copy(event, copyText);
   }
 
   chatItem.innerHTML = `
-    <div class="chat-item_user ${isSystem ? 'system' : ''}">${!isSystem && uid === me.id ? '（我）': ''}${displayName} :</div>
+    <div class="chat-item_user${isSystem ? ' system' : ''}"></div>
     <div class="chat-item_content">
       <pre>${msg}</pre>
     </div>
   `;
+  chatItem.querySelector('.chat-item_user').textContent = `${!isSystem && uid === me.id ? '（我）' : ''}${unescapeHtmlEntities(displayName)} :`;
+
   if (!isSystem) {
     chatItem.querySelector('.chat-item_content').appendChild(copyButton);
   }
@@ -255,6 +278,10 @@ function addChatItem(uid, message) {
 }
 function sendMessage(msg) {
   const message = msg ?? messageInput.value;
+  if (!message.trim()) {  // 只有当消息不为空时才发送
+    alert('消息不能为空');
+    return;
+  }
   addChatItem(me.id, message);
   users.forEach(u => {
     if (u.isMe) {
@@ -267,40 +294,40 @@ function sendMessage(msg) {
 
 async function sendFile(file) {
   pendingFile = file;
-  
+
   const otherUsers = users.filter(u => !u.isMe);
-  
+
   if (otherUsers.length === 1) {
     const modal = document.getElementById('userSelectModal');
     const progressContainer = modal.querySelector('.progress-container');
     const progressBar = modal.querySelector('.progress-bar-inner');
     const progressText = modal.querySelector('.progress-text');
-    
+
     try {
       const user = otherUsers[0];
       currentTransferUser = user;
       const fileInfo = { name: file.name, size: file.size };
-      
+
       // 显示进度条
       modal.style.display = 'block';
       document.getElementById('userSelectList').style.display = 'none';
       modal.querySelector('.modal-footer').style.display = 'block';
       modal.querySelector('.modal-footer button:last-child').style.display = 'none';
       progressContainer.style.display = 'block';
-      
+
       // 创建进度回调
       const onProgress = (sent, total) => {
         const progress = (sent / total) * 100;
         progressBar.style.width = progress + '%';
         // 计算传输速度
         const speed = sent / (Date.now() - startTime) * 1000; // 字节/秒
-        const speedText = speed > 1024 * 1024 
+        const speedText = speed > 1024 * 1024
           ? `${(speed / (1024 * 1024)).toFixed(2)} MB/s`
           : `${(speed / 1024).toFixed(2)} KB/s`;
         const displayName = user.nickname || user.id;
         progressText.textContent = `正在发送给 ${displayName}... ${speedText}`;
       };
-      
+
       const startTime = Date.now();
       await user.sendFile(fileInfo, file, onProgress);
       const displayName = user.nickname || user.id;
@@ -318,11 +345,11 @@ async function sendFile(file) {
       progressContainer.style.display = 'none';
       progressBar.style.width = '0%';
     }
-    
+
     pendingFile = null;
     return;
   }
-  
+
   showUserSelectModal();
 }
 function registCandidate() {
@@ -340,11 +367,11 @@ function connectAllOther() {
   for (const target of targets) {
     target.onicecandidate = (candidate) => {
       // console.log('candidate', candidate);
-      signalingServer.send(JSON.stringify({uid: me.id, targetId: target.id, type: '9001', data: { candidate }}));
+      signalingServer.send(JSON.stringify({ uid: me.id, targetId: target.id, type: '9001', data: { candidate } }));
     }
     target.createConnection().then(() => {
       // console.log('targetAddr', target.connAddressMe);
-      signalingServer.send(JSON.stringify({uid: me.id, targetId: target.id, type: '9002', data: { targetAddr: target.connAddressMe }}));
+      signalingServer.send(JSON.stringify({ uid: me.id, targetId: target.id, type: '9002', data: { targetAddr: target.connAddressMe } }));
     })
   }
 }
@@ -363,12 +390,12 @@ function refreshUsers(data) {
       xchatUser.id = u.id;
       xchatUser.isMe = u.id === me.id;
       xchatUser.nickname = u.nickname; // 设置昵称
-      
+
       xchatUser.onConnectionStateChange = (state) => {
         console.log(`User ${xchatUser.id} connection state: ${state}`);
         refreshUsersHTML();
       };
-      
+
       return xchatUser;
     }
   );
@@ -405,10 +432,10 @@ async function joinConnection(data) {
   }
   user.onicecandidate = (candidate) => {
     // console.log('candidate', candidate);
-    signalingServer.send(JSON.stringify({uid: me.id, targetId: user.id, type: '9001', data: { candidate }}));
+    signalingServer.send(JSON.stringify({ uid: me.id, targetId: user.id, type: '9001', data: { candidate } }));
   }
   await user.connectTarget(data.offer.sdp)
-  signalingServer.send(JSON.stringify({uid: me.id, targetId: user.id, type: '9003', data: { targetAddr: user.connAddressMe }}));
+  signalingServer.send(JSON.stringify({ uid: me.id, targetId: user.id, type: '9003', data: { targetAddr: user.connAddressMe } }));
 }
 
 async function joinedConnection(data) {
@@ -420,27 +447,38 @@ async function joinedConnection(data) {
   refreshUsersHTML();
 }
 
+
 function refreshUsersHTML() {
-  document.querySelector('#users').innerHTML = users.map(u => {
+  const usersList = document.querySelector('#users');
+  usersList.innerHTML = '';  // 清空当前内容
+
+  users.forEach(u => {
     const isConnected = u.isMe || u.isConnected();
     console.log(isConnected, '----');
     const statusClass = isConnected ? 'connected' : 'disconnected';
-    const statusIcon = isConnected ? 
-      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>` : 
+    const statusIcon = isConnected ?
+      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>` :
       `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.43-.98 2.63-2.31 2.98l1.46 1.46C20.88 15.61 22 13.95 22 12c0-2.76-2.24-5-5-5zm-1 4h-2.19l2 2H16zM2 4.27l3.11 3.11C3.29 8.12 2 9.91 2 12c0 2.76 2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1 0-1.59 1.21-2.9 2.76-3.07L8.73 11H8v2h2.73L13 15.27V17h1.73l4.01 4L20 19.74 3.27 3 2 4.27z"/></svg>`;
-    
+
+    const listItem = document.createElement('li');
+
+    // 连接状态图标
+    const statusSpan = document.createElement('span');
+    statusSpan.classList.add('connection-status', statusClass);
+    statusSpan.innerHTML = statusIcon;
+
+    // 用户名称
+    const nameText = document.createElement('span');
     const displayName = u.nickname || u.id;
-    
-    return `
-      <li>
-        <span class="connection-status ${statusClass}">
-          ${statusIcon}
-        </span>
-        ${displayName}${u.isMe?'（我）':''}
-      </li>
-    `;
-  }).join('');
+    nameText.textContent = unescapeHtmlEntities(displayName) + (u.isMe ? '（我）' : '');
+
+    listItem.appendChild(statusSpan);
+    listItem.appendChild(nameText);
+
+    usersList.appendChild(listItem);
+  });
 }
+
 
 function enterTxt(event) {
   if (event.ctrlKey || event.shiftKey) {
@@ -455,24 +493,25 @@ function enterTxt(event) {
 function showUserSelectModal() {
   const modal = document.getElementById('userSelectModal');
   const userList = document.getElementById('userSelectList');
-  
+
   // 清空之前的列表
   userList.innerHTML = '';
-  
+
   // 添加用户选项
   users.forEach(user => {
     if (!user.isMe) {
       const item = document.createElement('div');
       item.className = 'user-select-item';
       const displayName = user.nickname || user.id;
-      
+
       item.innerHTML = `
         <label>
           <input type="checkbox" value="${user.id}">
-          <span>${displayName}</span>
+          <span></span>
         </label>
       `;
-      
+      item.querySelector('span').textContent = unescapeHtmlEntities(displayName);
+
       // 点击整行时切换复选框状态
       item.addEventListener('click', (e) => {
         const checkbox = item.querySelector('input[type="checkbox"]');
@@ -480,18 +519,21 @@ function showUserSelectModal() {
         checkbox.checked = !checkbox.checked;
         e.preventDefault();
       });
-      
+
       userList.appendChild(item);
     }
   });
-  
+
   modal.style.display = 'block';
 }
+
+let cancelRequested = false;  // 新增标志位，判断是否请求取消
 
 function cancelSendFile() {
   if (currentTransferUser) {
     currentTransferUser.cancelTransfer();
   }
+  cancelRequested = true; // 设置取消标志
   const modal = document.getElementById('userSelectModal');
   modal.style.display = 'none';
   pendingFile = null;
@@ -507,60 +549,73 @@ async function confirmSendFile() {
   const userList = document.getElementById('userSelectList');
   const selectedUsers = Array.from(document.querySelectorAll('#userSelectList input[type="checkbox"]:checked'))
     .map(checkbox => users.find(u => u.id === checkbox.value));
-  
+
   if (selectedUsers.length > 0 && pendingFile) {
     sendButton.disabled = true;
     sendButton.textContent = '发送中...';
     userList.style.display = 'none';
     progressContainer.style.display = 'block';
-    
+
     try {
       const fileInfo = { name: pendingFile.name, size: pendingFile.size };
       const totalUsers = selectedUsers.length;
       const startTime = Date.now();
-      
+
       for (let i = 0; i < selectedUsers.length; i++) {
+        if (cancelRequested) {  // 检查取消标志
+          break; // 如果标志位为true，停止文件发送
+        }
+
         const user = selectedUsers[i];
-        const displayName = user.nickname || user.id;
+        const displayName = unescapeHtmlEntities(user.nickname || user.id);
         progressText.textContent = `正在发送给 ${displayName}... (${i + 1}/${totalUsers})`;
-        
+
         const onProgress = (sent, total) => {
+          if (cancelRequested) {  // 在上传过程中也要检查取消标志
+            return;  // 直接跳出，不更新进度条
+          }
+
           const userProgress = (sent / total) * 100;
           const totalProgress = ((i * 100) + userProgress) / totalUsers;
           progressBar.style.width = totalProgress + '%';
-          // 计算传输速度
           const speed = sent / (Date.now() - startTime) * 1000; // 字节/秒
-          const speedText = speed > 1024 * 1024 
+          const speedText = speed > 1024 * 1024
             ? `${(speed / (1024 * 1024)).toFixed(2)} MB/s`
             : `${(speed / 1024).toFixed(2)} KB/s`;
           progressText.textContent = `正在发送给 ${displayName}... (${i + 1}/${totalUsers}) ${speedText}`;
         };
-        
+
         await user.sendFile(fileInfo, pendingFile, onProgress);
       }
-      
-      // 使用昵称显示在聊天记录中
+
+      if (cancelRequested) {
+        throw new Error("文件发送已取消");
+      }
+
       const displayNames = selectedUsers.map(u => u.nickname || u.id).join(', ');
       addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayNames})`);
     } catch (error) {
-      console.error('发送文件失败:', error);
-      alert('发送文件失败，请重试');
+      if (cancelRequested) {
+        console.log('文件发送被取消');
+      } else {
+        console.error('发送文件失败:', error);
+        alert('发送文件失败，请重试');
+      }
     } finally {
       sendButton.disabled = false;
       sendButton.textContent = '发送';
       userList.style.display = 'block';
       progressContainer.style.display = 'none';
       progressBar.style.width = '0%';
+      cancelRequested = false;  // 重置取消标志
     }
   }
-  
+
   modal.style.display = 'none';
   pendingFile = null;
 }
 
-
 let droptarget = document.body;
-    
 async function handleEvent(event) {
   event.preventDefault();
   if (event.type === 'drop') {
@@ -571,7 +626,13 @@ async function handleEvent(event) {
   } else if (event.type === 'dragleave') {
     droptarget.classList.remove('dragover');
   } else {
-    droptarget.classList.add('dragover');
+    // 检查拖拽的对象是否是文件类型
+    const hasFile = Array.from(event.dataTransfer.items).some(item => item.kind === 'file');
+    if (hasFile) {
+      droptarget.classList.add('dragover');
+    } else {
+      droptarget.classList.remove('dragover');
+    }
   }
 }
 
@@ -592,9 +653,7 @@ document.querySelector('.file-btn').addEventListener('click', async () => {
 });
 
 document.querySelector('.send-btn').addEventListener('click', () => {
-  if (messageInput.value.trim()) {  // 只有当消息不为空时才发送
-    sendMessage();
-  }
+  sendMessage();
 });
 
 function showNicknameModal() {
@@ -602,10 +661,10 @@ function showNicknameModal() {
   const input = document.getElementById('nicknameInput');
   input.value = currentNickname;
   modal.style.display = 'block';
-  
+
   // 自动获取焦点
   setTimeout(() => input.focus(), 0);
-  
+
   // 添加回车事件监听
   input.onkeydown = (event) => {
     if (event.key === 'Enter') {
@@ -619,7 +678,7 @@ function closeNicknameModal() {
   const modal = document.getElementById('nicknameModal');
   const input = document.getElementById('nicknameInput');
   modal.style.display = 'none';
-  
+
   // 清除回车事件监听
   input.onkeydown = null;
 }
@@ -627,18 +686,18 @@ function closeNicknameModal() {
 function saveNickname() {
   const input = document.getElementById('nicknameInput');
   const nickname = input.value.trim();
-  
+
   if (nickname) {
     currentNickname = nickname;
     document.cookie = `nickname=${encodeURIComponent(nickname)}; path=/; max-age=31536000`; // 保存一年
-    
+
     // 更新本地显示
     const user = users.find(u => u.id === me.id);
     if (user) {
       user.nickname = nickname;
       refreshUsersHTML();
     }
-    
+
     // 发送到服务器
     signalingServer.send(JSON.stringify({
       uid: me.id,
@@ -647,7 +706,7 @@ function saveNickname() {
       data: { nickname }
     }));
   }
-  
+
   closeNicknameModal();
 }
 
@@ -659,10 +718,10 @@ function toggleUsersList() {
 }
 
 // Add event listener for toggle button and overlay
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const toggleBtn = document.querySelector('.toggle-users-btn');
   const overlay = document.querySelector('.mobile-overlay');
-  
+
   toggleBtn.addEventListener('click', toggleUsersList);
   overlay.addEventListener('click', toggleUsersList);
 
