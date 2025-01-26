@@ -36,7 +36,7 @@ let roomPwd = { };
 try {
   // 获取可执行程序所在目录
   const exePath = process.pkg ? path.dirname(process.execPath) : __dirname;
-  roomPwdConfig = require(path.join(exePath, 'room_pwd.json'));
+  roomPwdConfig = require(path.join(exePath, '.room_pwd.json'));
   let roomIds = [];
   roomPwdConfig.forEach(item => {
     roomIds.push(item.roomId);
