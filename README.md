@@ -13,6 +13,30 @@ demo演示：https://fagedongxi.com
 ## 场景：
 比如新装的win系统需要从mac系统传一些需要🪜才能下载的软件或者搜到的一些东西
 
+## 容器部署（推荐）
+```shell
+# 运行容器
+docker run \
+  --name internal-chat \
+  -p 3411:3411 \
+  -d \
+  ly2022/internal-chat
+  
+# 修改配置
+docker exec -it internal-chat /bin/sh
+nano /usr/share/nginx/html/index.js
+nano /server/room_pwd.json
+```
+
+## 容器构建
+```shell
+./build.sh
+
+./start.sh
+
+./stop.sh
+```
+
 ## 服务端部署（仅部署服务端不行，一定看到最后的“网页部署”）：
 部署介绍：https://v.douyin.com/iUWewPmf/
 
