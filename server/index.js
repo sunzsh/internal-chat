@@ -40,7 +40,7 @@ try {
   let roomIds = [];
   roomPwdConfig.forEach(item => {
     roomIds.push(item.roomId);
-    roomPwd[item.roomId] = item.pwd;
+    roomPwd[item.roomId] = { "pwd": item.pwd, "turns": item.turns };
   });
   console.log(`加载房间数据: ${roomIds.join(',')}`);
 } catch (e) {
@@ -67,14 +67,17 @@ server.on('connection', (socket, request) => {
   if (roomId === '') {
     roomId = null;
   }
+  let turns = null;
   if (roomId) {
-    if (!pwd || !roomPwd[roomId] || roomPwd[roomId].toLowerCase() !== pwd.toLowerCase()) {
+    if (!pwd || !roomPwd[roomId] || roomPwd[roomId].pwd.toLowerCase() !== pwd.toLowerCase()) {
       roomId = null;
+    } else {
+      turns = roomPwd[roomId].turns;
     }
   }
   const currentId = service.registerUser(ip, roomId, socket);
   // 向客户端发送自己的id
-  socketSend_UserId(socket, currentId, roomId);
+  socketSend_UserId(socket, currentId, roomId, turns);
   
   console.log(`${currentId}@${ip}${roomId ? '/' + roomId : ''} connected`);
   
@@ -160,8 +163,8 @@ function send(socket, type, data) {
   socket.send(JSON.stringify({ type, data }));
 }
 
-function socketSend_UserId(socket, id, roomId) {
-  send(socket, SEND_TYPE_REG, { id, roomId });
+function socketSend_UserId(socket, id, roomId, turns) {
+  send(socket, SEND_TYPE_REG, { id, roomId, turns });
 }
 function socketSend_RoomInfo(socket, ip, roomId) {
   const result = service.getUserList(ip, roomId).map(user => ({ 

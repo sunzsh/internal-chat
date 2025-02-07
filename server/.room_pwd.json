@@ -2,6 +2,11 @@
   {
     "roomId": "房间号",
     "pwd": "md5(密码)",
+    "turns": [{
+      "urls": [ "url" ],
+      "username": "turn用户名",
+      "credential": "turn密码"
+    }],
     "remark": "备注"
   }
 ]
