@@ -1,4 +1,5 @@
 .DS_Store
+room_pwd.json
 **/node_modules
 /dist
 

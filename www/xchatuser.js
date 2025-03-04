@@ -12,8 +12,22 @@ connOption =
   maxRetransmits: 10, // 最大重传次数
   bufferedAmountLowThreshold: 1024 * 16 // 设置缓冲区低阈值为 16KB
 }
+
+window.fgdx_configuration = {
+  iceServers: [
+    {
+      urls: [
+        'stun:74.125.250.129:19302'
+      ]
+    }
+  ],
+  iceTransportPolicy: 'all',        // 允许所有类型的候选者
+  iceCandidatePoolSize: 10           // 预生成的候选者数量
+};
+
 class XChatUser {
   id = null;
+  roomId = null;
   isMe = false;
   nickname = null;
 
@@ -32,6 +46,8 @@ class XChatUser {
   receivedChunks = [];
   fileInfo = null;
 
+  connectionPromise = null;
+
   #isTransferCancelled = false;
   #transferTimeout = null;
   #expectedFileSize = 0;
@@ -42,8 +58,15 @@ class XChatUser {
   #currentChunkInfo = null;
   #pendingFile = null;
 
+
   async createConnection() {
-    this.rtcConn = new RTCPeerConnection({ iceServers: [] });
+    const peerConnectionConstraints = {
+      optional: [
+        { googIPv6: false }
+      ]
+    };
+    
+    this.rtcConn = new RTCPeerConnection(window.fgdx_configuration, peerConnectionConstraints);
     this.chatChannel = this.rtcConn.createDataChannel('chat',  connOption);
     this.dataChannel_initEvent()
     // this.dataChannel.onopen = () => console.log('DataChannel is open');
@@ -52,19 +75,64 @@ class XChatUser {
     await this.rtcConn.setLocalDescription(offer)
     this.connAddressMe = this.rtcConn.localDescription;
 
-    this.rtcConn.onicecandidate = event => {
-      if (event.candidate) {
-        this.candidateArr.push(event.candidate);
-        this.onicecandidate(event.candidate, this.candidateArr);
+    this.rtcConn.onicecandidateerror = (event) => {
+      console.error('ICE Candidate Error:', event, {
+        errorCode: event.errorCode,
+        errorText: event.errorText,
+        hostCandidate: event.hostCandidate,
+        url: event.url
+      });
+    };
+
+    this.rtcConn.onicegatheringstatechange = () => {
+      const state = this.rtcConn.iceGatheringState;
+      console.log(`ICE gathering state changed: ${state}`);
+      
+      switch(state) {
+        case 'new':
+          console.log('Starting to gather candidates...');
+          break;
+        case 'gathering':
+          console.log('Gathering ICE candidates...');
+          break;
+        case 'complete':
+          console.log('ICE gathering completed');
+          console.log('Final candidates:', this.candidateArr);
+          break;
       }
     };
 
-    this.rtcConn.onconnectionstatechange = () => {
-      console.log(`Connection state changed: ${this.rtcConn.connectionState}`);
-      this.onConnectionStateChange(this.rtcConn.connectionState);
-      if (this.rtcConn.connectionState === 'failed') {
-        console.log('Connection failed, attempting to reconnect...');
-        this.reconnect();
+    this.rtcConn.oniceconnectionstatechange = () => {
+      console.log(`ICE connection state: ${this.rtcConn.iceConnectionState}`);
+    };
+    if (this.rtcConn.connectionState) {
+      this.rtcConn.onconnectionstatechange = () => {
+        this.onConnectionStateChange(this.rtcConn.connectionState);
+      };
+    } else {
+      // firefox没有connectionState，也不支持onConnectionStateChange
+      this.rtcConn.oniceconnectionstatechange = this.rtcConn.onsignalingstatechange = () => {
+        this.onConnectionStateChange(this.getConnectionState());
+      };
+    }
+
+    this.rtcConn.onicecandidate = event => {
+      if (event.candidate) {
+        console.log('ICE Candidate Details:', {
+          candidate: event.candidate.candidate,
+          type: event.candidate.type,
+          protocol: event.candidate.protocol,
+          address: event.candidate.address,
+          port: event.candidate.port,
+          priority: event.candidate.priority,
+          foundation: event.candidate.foundation,
+          relatedAddress: event.candidate.relatedAddress,
+          relatedPort: event.candidate.relatedPort
+        });
+        this.candidateArr.push(event.candidate);
+        this.onicecandidate(event.candidate, this.candidateArr);
+      } else {
+        console.log('ICE gathering completed');
       }
     };
 
@@ -96,7 +164,7 @@ class XChatUser {
       this.closeConnection();
     }
 
-    this.rtcConn = new RTCPeerConnection({ iceServers: [] });
+    this.rtcConn = new RTCPeerConnection(window.fgdx_configuration);
 
     this.rtcConn.onicecandidate = event => {
       if (event.candidate) {
@@ -116,16 +184,51 @@ class XChatUser {
     this.connAddressMe = await this.rtcConn.createAnswer();
     this.rtcConn.setLocalDescription(this.connAddressMe);
 
-    this.rtcConn.onconnectionstatechange = () => {
-      console.log(`Connection state changed: ${this.rtcConn.connectionState}`);
-      this.onConnectionStateChange(this.rtcConn.connectionState);
-      if (this.rtcConn.connectionState === 'failed') {
-        console.log('Connection failed, attempting to reconnect...');
-        this.reconnect();
-      }
-    };
+    if (this.rtcConn.connectionState) {
+      this.rtcConn.onconnectionstatechange = () => {
+        console.log(`Connection state changed: ${this.rtcConn.connectionState}`);
+        this.onConnectionStateChange(this.rtcConn.connectionState);
+        if (this.rtcConn.connectionState === 'failed') {
+          console.log('Connection failed, attempting to reconnect...');
+          this.reconnect();
+        }
+      };
+    } else {
+      // firefox没有connectionState，也不支持onConnectionStateChange
+      this.rtcConn.oniceconnectionstatechange = this.rtcConn.onsignalingstatechange = () => {
+        this.onConnectionStateChange(this.getConnectionState());
+      };
+    }
 
     return this;
+  }
+
+  getConnectionState() {
+    if (!this.rtcConn) {
+      return null;
+    }
+    if (this.rtcConn.connectionstate) {
+      return this.rtcConn.connectionState;
+    } else {
+      let firefoxConnectionState = 'new';
+      // 根据 iceConnectionState 和 signalingState 推断状态
+      if (this.rtcConn.iceConnectionState === 'connected' || this.rtcConn.iceConnectionState === 'completed') {
+        if (this.rtcConn.signalingState === 'stable') {
+          firefoxConnectionState = 'connected';
+        } else {
+          firefoxConnectionState = 'connecting';
+        }
+      } else if (this.rtcConn.iceConnectionState === 'disconnected') {
+        firefoxConnectionState = 'disconnected';
+      } else if (this.rtcConn.iceConnectionState === 'failed') {
+        firefoxConnectionState = 'failed';
+      } else if (this.rtcConn.iceConnectionState === 'closed') {
+        firefoxConnectionState = 'closed';
+      } else if (this.rtcConn.iceConnectionState === 'new') {
+        firefoxConnectionState = 'new';
+      }
+      return firefoxConnectionState;
+    }
   }
 
   addIceCandidate(candidate) {
@@ -485,8 +588,21 @@ class XChatUser {
 
   // 检查是否已连接
   isConnected() {
-    return this.rtcConn && this.rtcConn.connectionState === 'connected';
+    if (!this.rtcConn) {
+      return false;
+    }
+    if (this.rtcConn.connectionState) {
+      return this.rtcConn.connectionState === 'connected';
+    }
+    if (this.rtcConn.iceConnectionState === 'connected' || this.rtcConn.iceConnectionState === 'completed') {
+      if (this.rtcConn.signalingState === 'stable') {
+        return true;
+      }
+    }
+    return false;
   }
+
+
 
   #setTransferTimeout() {
     this.#clearTransferTimeout();

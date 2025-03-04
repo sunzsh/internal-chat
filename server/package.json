@@ -15,7 +15,11 @@
   "bin": "./index.js",
   "pkg": {
     "assets": [
+      "!room_pwd.json",
       "./node_modules/**/*"
+    ],
+    "ignore": [
+      "./room_pwd.json"
     ],
     "targets": [
       "node16-linux-x64",

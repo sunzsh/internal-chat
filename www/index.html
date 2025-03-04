@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>发个东西 - 局域网文字/文件P2P传输工具</title>
-  <script src="./xchatuser.js?v=17"></script>
-  <link rel="stylesheet" href="./style.css?v=17">
+  <script src="./xchatuser.js?v=20"></script>
+  <link rel="stylesheet" href="./style.css?v=20">
 </head>
 <body>
   <div class="dragtip">
@@ -28,6 +28,11 @@
         </button>
       </div>
       <div class="toolbar-right">
+        <button class="toolbar-btn toggle-users-btn mobile-only" title="切换在线用户列表">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="currentColor" d="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15 17,16.5V19H23V16.5C23,14.17 18.33,13 16,13M8,13C5.67,13 1,14.17 1,16.5V19H15V16.5C15,14.17 10.33,13 8,13M8,11A3,3 0 0,0 11,8A3,3 0 0,0 8,5A3,3 0 0,0 5,8A3,3 0 0,0 8,11M16,11A3,3 0 0,0 19,8A3,3 0 0,0 16,5A3,3 0 0,0 13,8A3,3 0 0,0 16,11Z"/>
+          </svg>
+        </button>
         <button class="toolbar-btn send-btn" title="发送消息">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -41,6 +46,8 @@
     <ul id="users">
     </ul>
   </div>
+
+  <div class="mobile-overlay"></div>
 
   <div class="modal" id="userSelectModal">
     <div class="modal-content">
@@ -73,6 +80,18 @@
     </div>
   </div>
 
-  <script src="./index.js?v=17"></script>
+  <div class="modal" id="passwordModal">
+    <div class="modal-content">
+      <h3>请输入房间密码</h3>
+      <div class="nickname-input-container">
+        <input type="password" id="roomPasswordInput" placeholder="请输入密码" autocomplete="off" name="password_fake">
+      </div>
+      <div class="modal-footer">
+        <button onclick="submitRoomPassword()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./index.js?v=20"></script>
 </body>
 </html>

@@ -100,8 +100,13 @@ pre {
   font-size: 14px;
   user-select: none;
 }
+.chat-item .chat-item_user.system {
+  color: #FFA726;
+}
 .chat-item .chat-item_content {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   padding-left: 0;
   color: #e0e0e0;
 }
@@ -303,7 +308,7 @@ pre {
   align-items: center;
 }
 
-.toolbar-btn {
+.toolbar-btn,.copy-btn {
   background: none;
   border: none;
   padding: 8px;
@@ -316,7 +321,7 @@ pre {
   transition: all 0.2s;
 }
 
-.send-btn:hover, .toolbar-btn:hover {
+.send-btn:hover, .toolbar-btn:hover, .copy-btn:hover {
   background-color: #363636;
   /* color: #64B5F6; */
 }
@@ -369,7 +374,71 @@ pre {
   font-size: 14px;
 }
 
+.nickname-input-container input[type="password"] {
+  letter-spacing: 2px;
+  font-family: monospace;
+}
+
 .nickname-input-container input:focus {
   outline: none;
   border-color: #64B5F6;
+}
+
+/* 移动端专用元素在PC上隐藏 */
+.mobile-only {
+  display: none;
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+/* Mobile responsive styles */
+@media screen and (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .right {
+    position: fixed;
+    top: 0;
+    right: -220px;
+    width: 200px;
+    height: 100%;
+    transition: right 0.3s ease;
+    margin: 0;
+    border-radius: 0;
+    z-index: 100;
+    background-color: #242424;
+  }
+
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+  }
+
+  body.show-users .mobile-overlay {
+    display: block;
+  }
+
+  body.show-users .right {
+    right: 0;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .left {
+    margin: 10px;
+    border-radius: 8px;
+  }
+
+  body.show-users .toggle-users-btn {
+    color: #64B5F6;
+    background-color: #363636;
+  }
 }
