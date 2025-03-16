@@ -1,4 +1,4 @@
-const wsUrl = 'wss://fagedongxi.com/ws';
+const wsUrl = '/ws';
 
 var users = [];
 var me = new XChatUser();
