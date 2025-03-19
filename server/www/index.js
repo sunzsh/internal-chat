@@ -1,4 +1,4 @@
-const wsUrl = '/ws';
+const wsUrl = '/';
 
 var users = [];
 var me = new XChatUser();
@@ -66,6 +66,8 @@ function submitRoomPassword() {
 function connectWebSocket() {
   const roomId = window.location.pathname.split('/')[1];
   const wsUrlWithPassword = wsUrl.replace(/\/$/g, '') + '/' + roomId + (roomPassword ? '/' + roomPassword : '');
+  console.log('Connecting to:', wsUrlWithPassword);
+  
   signalingServer = new WebSocket(wsUrlWithPassword);
   
   signalingServer.onopen = () => {
