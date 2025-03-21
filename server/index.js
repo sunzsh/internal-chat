@@ -1,4 +1,6 @@
 const WebSocket = require('ws');
+const express = require('express');
+const app = express();
 const service = require('./data');
 const path = require('path');
 
@@ -15,7 +17,17 @@ console.log = function() {
 
 // 接收启动参数作为端口号，默认8081
 const PORT = process.argv[2] || 8081;
-const server = new WebSocket.Server({ port: PORT });
+
+// 托管www文件夹里的静态文件
+app.use(express.static(path.join(__dirname, './www')));
+
+// 创建HTTP服务器
+const httpServer = app.listen(PORT, () => {
+  console.log(`HTTP server running on http://localhost:${PORT}`);
+});
+
+// 在HTTP服务器上创建WebSocket服务器
+const server = new WebSocket.Server({ server: httpServer });
 
 const SEND_TYPE_REG = '1001'; // 注册后发送用户id
 const SEND_TYPE_ROOM_INFO = '1002'; // 发送房间信息
@@ -155,9 +167,6 @@ server.on('connection', (socket, request) => {
     console.log(`${currentId}@${ip}${roomId ? '/' + roomId : ''} disconnected`);
   });
 });
-
-
-
 
 function send(socket, type, data) {
   socket.send(JSON.stringify({ type, data }));

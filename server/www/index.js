@@ -1,4 +1,7 @@
-const wsUrl = 'wss://fagedongxi.com/ws';
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const host = window.location.host;
+const wsUrl = '/';
+
 
 var users = [];
 var me = new XChatUser();
@@ -65,7 +68,9 @@ function submitRoomPassword() {
 // 连接WebSocket
 function connectWebSocket() {
   const roomId = window.location.pathname.split('/')[1];
-  const wsUrlWithPassword = wsUrl.replace(/\/$/g, '') + '/' + roomId + (roomPassword ? '/' + roomPassword : '');
+  const wsUrlWithPassword = `${protocol}//${host}${wsUrl}`.replace(/\/$/g, '') + '/' + roomId + (roomPassword ? '/' + roomPassword : '');
+  console.log('Connecting to:', wsUrlWithPassword);
+  
   signalingServer = new WebSocket(wsUrlWithPassword);
   
   signalingServer.onopen = () => {

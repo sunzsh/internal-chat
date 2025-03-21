@@ -1,0 +1,8 @@
+FROM node:16.20.2-alpine
+WORKDIR /usr/src/app
+COPY package.json .
+COPY package-lock.json .
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && npm config set registry https://registry.npmmirror.com && npm install
+COPY . .
+EXPOSE 8081
+CMD npm start
