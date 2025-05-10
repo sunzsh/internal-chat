@@ -1,17 +1,24 @@
 {
   "name": "internal-chat",
   "version": "1.1.0",
-  "description": "",
+  "description": "纯 HTML 写的局域网文字/文件 P2P 传输工具",
+  "license": "MIT",
+  "author": "sunzsh",
   "main": "index.js",
+  "bin": "./index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "pkg": "pkg .",
+    "pkg:linux": "pkg . -t node18-linux-x64 -o dist/internal-chat-linux",
+    "pkg:win": "pkg . -t node18-win-x64 -o dist/internal-chat-win.exe",
+    "pkg:mac": "pkg . -t node18-macos-x64,node18-macos-arm64 -o dist/internal-chat-macos"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "ws": "^8.18.0"
   },
-  "bin": "./index.js",
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
   "pkg": {
     "assets": [
       "!room_pwd.json",
@@ -22,9 +29,10 @@
       "./room_pwd.json"
     ],
     "targets": [
-      "node16-linux-x64",
-      "node16-win-x64",
-      "node16-macos-x64"
+      "node18-linux-x64",
+      "node18-win-x64",
+      "node18-macos-x64",
+      "node18-macos-arm64"
     ],
     "outputPath": "dist"
   }
