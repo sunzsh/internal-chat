@@ -142,12 +142,14 @@ function connectWebSocket() {
     console.error('WebSocket error:', error);
     if (error.target.readyState === WebSocket.CLOSED) {
       alert('密码错误或连接失败');
-      // 显示密码输入框，隐藏主界面
-      document.querySelector('.left').style.display = 'none';
-      document.querySelector('.right').style.display = 'none';
-      document.getElementById('passwordModal').style.display = 'block';
-      document.getElementById('roomPasswordInput').value = '';
-      document.getElementById('roomPasswordInput').focus();
+      if (roomId) {
+        // 显示密码输入框，隐藏主界面
+        document.querySelector('.left').style.display = 'none';
+        document.querySelector('.right').style.display = 'none';
+        document.getElementById('passwordModal').style.display = 'block';
+        document.getElementById('roomPasswordInput').value = '';
+        document.getElementById('roomPasswordInput').focus();
+      }
     }
   };
 }
