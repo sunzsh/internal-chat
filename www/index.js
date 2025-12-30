@@ -101,8 +101,13 @@ function connectWebSocket() {
       me.roomId = data.roomId;
       if (roomId && me.roomId !== roomId) {
         addChatItem('system', '房间密码错误，已切换至内网频道');
+        updateStatusBar(false, null);
         return;
       }
+      // 更新状态栏
+      const hasRelay = data.turns && data.turns.length > 0;
+      updateStatusBar(!!roomId, hasRelay);
+      
       if (data.turns && data.turns.length > 0) {
         window.fgdx_configuration.iceServers.push(...data.turns)
       }
@@ -201,10 +206,13 @@ async function copy(e, msg) {
 function addLinkItem(uid, file) {
   const chatBox = document.querySelector('.chat-wrapper');
   const chatItem = document.createElement('div');
-  chatItem.className = 'chat-item';
   
   const user = users.find(u => u.id === uid);
   const displayName = user?.nickname || uid;
+  const isSent = uid === me.id;
+  
+  // 设置消息类型类名
+  chatItem.className = isSent ? 'chat-item sent' : 'chat-item received';
   
   // 检查是否是图片文件
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
@@ -227,8 +235,10 @@ function addLinkItem(uid, file) {
   }
   
   chatItem.innerHTML = `
-    <div class="chat-item_user">${uid === me.id ? '（我）': ''}${displayName} :</div>
-    <div class="chat-item_content">${contentHtml}</div>
+    <div class="chat-item_user">${isSent ? '（我）': ''}${displayName}</div>
+    <div class="chat-item_bubble">
+      <div class="chat-item_content">${contentHtml}</div>
+    </div>
   `;
   
   // 如果是图片，添加点击事件和加载完成后的滚动
@@ -290,7 +300,7 @@ function addLinkItem(uid, file) {
   }
 }
 
-function addChatItem(uid, message) {
+function addChatItem(uid, message, options = {}) {
   // 如果是系统控制消息（以##开头），不显示在聊天记录中
   try {
     if (typeof message === 'string' && message.startsWith('##')) {
@@ -306,7 +316,21 @@ function addChatItem(uid, message) {
 
   const chatBox = document.querySelector('.chat-wrapper');
   const chatItem = document.createElement('div');
-  chatItem.className = 'chat-item';
+  
+  const user = users.find(u => u.id === uid);
+  const displayName = uid === 'system' ? '系统' : (user?.nickname || uid);
+  const isSystem = uid === 'system';
+  const isSent = uid === me.id && !isSystem;
+  
+  // 设置消息类型类名
+  if (isSystem) {
+    chatItem.className = 'chat-item system';
+  } else if (isSent) {
+    chatItem.className = 'chat-item sent';
+  } else {
+    chatItem.className = 'chat-item received';
+  }
+  
   const copyText = message;
   let msg = message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   // 判断是否url，兼容端口号和带参数的网址
@@ -316,26 +340,34 @@ function addChatItem(uid, message) {
     });
   }
 
-  const user = users.find(u => u.id === uid);
-  const displayName = uid === 'system' ? '系统' : (user?.nickname || uid);
-  const isSystem = uid === 'system';
+  // 格式化时间戳
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const timestamp = `${hours}:${minutes}`;
 
-  const copyButton = document.createElement('button')
-  copyButton.className = 'copy-btn'
-  copyButton.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"></path></svg>'
-  copyButton.onclick = function () {
-    copy(event,copyText)
-  }
-
+  // 使用气泡样式结构，添加时间戳
   chatItem.innerHTML = `
-    <div class="chat-item_user ${isSystem ? 'system' : ''}">${!isSystem && uid === me.id ? '（我）': ''}${displayName} :</div>
-    <div class="chat-item_content">
-      <pre>${msg}</pre>
+    ${!isSystem ? `<div class="chat-item_user">${isSent ? '（我）': ''}${displayName}</div>` : ''}
+    <div class="chat-item_bubble">
+      <div class="chat-item_content">
+        <pre>${msg}</pre>
+      </div>
     </div>
+    ${!isSystem ? `<div class="chat-item_meta"><span>${timestamp}</span></div>` : ''}
   `;
-  if (!isSystem) {
+  
+  // 只有在非系统消息且不是文件发送确认消息时才添加复制按钮
+  if (!isSystem && !options.noCopyButton) {
+    const copyButton = document.createElement('button')
+    copyButton.className = 'copy-btn'
+    copyButton.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"></path></svg>'
+    copyButton.onclick = function () {
+      copy(event,copyText)
+    }
     chatItem.querySelector('.chat-item_content').appendChild(copyButton);
   }
+  
   chatBox.appendChild(chatItem);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -390,7 +422,7 @@ async function sendFile(file) {
       const startTime = Date.now();
       await user.sendFile(fileInfo, file, onProgress);
       const displayName = user.nickname || user.id;
-      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayName})`);
+      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayName})`, { noCopyButton: true });
     } catch (error) {
       console.error('发送文件失败:', error);
       alert('发送文件失败，请重试');
@@ -506,26 +538,182 @@ async function joinedConnection(data) {
   refreshUsersHTML();
 }
 
+// 更新状态栏显示
+function updateStatusBar(isPrivateRoom, hasRelay) {
+  const statusBar = document.querySelector('.status-bar-content');
+  if (!statusBar) return;
+  
+  let statusText = '';
+  let iconClass = '';
+  let iconSvg = '';
+  
+  if (isPrivateRoom) {
+    statusText = `房间频道 ${me.roomId || ''}`;
+    if (hasRelay) {
+      iconClass = 'relay';
+      iconSvg = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+      </svg>`;
+      statusText += ' (中继节点)';
+    } else {
+      iconSvg = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>`;
+    }
+  } else {
+    statusText = '内网频道';
+    iconSvg = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    </svg>`;
+  }
+  
+  statusBar.innerHTML = `
+    <span class="status-icon ${iconClass}">
+      ${iconSvg}
+    </span>
+    <span class="status-text">${statusText}</span>
+  `;
+}
+
 function refreshUsersHTML() {
-  document.querySelector('#users').innerHTML = users.map(u => {
-    const isConnected = u.isMe || u.isConnected();
-    console.log(isConnected, '----');
-    const statusClass = isConnected ? 'connected' : 'disconnected';
-    const statusIcon = isConnected ? 
-      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>` : 
-      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.43-.98 2.63-2.31 2.98l1.46 1.46C20.88 15.61 22 13.95 22 12c0-2.76-2.24-5-5-5zm-1 4h-2.19l2 2H16zM2 4.27l3.11 3.11C3.29 8.12 2 9.91 2 12c0 2.76 2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1 0-1.59 1.21-2.9 2.76-3.07L8.73 11H8v2h2.73L13 15.27V17h1.73l4.01 4L20 19.74 3.27 3 2 4.27z"/></svg>`;
+  // 对用户列表排序：已连接用户优先
+  const sortedUsers = [...users].sort((a, b) => {
+    if (a.isMe) return -1; // 当前用户始终在最前
+    if (b.isMe) return 1;
+    
+    const aConnected = a.isConnected();
+    const bConnected = b.isConnected();
+    
+    if (aConnected && !bConnected) return -1;
+    if (!aConnected && bConnected) return 1;
+    return 0;
+  });
+  
+  // 统计用户数量
+  const totalUsers = users.length;
+  const connectedUsers = users.filter(u => u.isMe || u.isConnected()).length;
+  
+  // 添加用户统计信息
+  const statsHTML = `
+    <div class="user-stats">
+      <span class="stats-label">在线用户</span>
+      <span class="stats-count">${connectedUsers} / ${totalUsers}</span>
+    </div>
+  `;
+  
+  // 检查是否为空或所有用户都断开
+  if (users.length === 0) {
+    document.querySelector('#users').innerHTML = statsHTML + `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor" opacity="0.3">
+          <path d="M16,13C15.71,13 15.38,13 15.03,13.05C16.19,13.89 17,15 17,16.5V19H23V16.5C23,14.17 18.33,13 16,13M8,13C5.67,13 1,14.17 1,16.5V19H15V16.5C15,14.17 10.33,13 8,13M8,11A3,3 0 0,0 11,8A3,3 0 0,0 8,5A3,3 0 0,0 5,8A3,3 0 0,0 8,11M16,11A3,3 0 0,0 19,8A3,3 0 0,0 16,5A3,3 0 0,0 13,8A3,3 0 0,0 16,11Z"/>
+        </svg>
+        <p>暂无其他用户</p>
+        <span>等待其他用户加入...</span>
+      </div>
+    `;
+    return;
+  }
+  
+  if (connectedUsers === 1 && users.length > 1) {
+    // 只有自己在线，其他人都断开
+    const emptyStateHTML = `
+      <div class="empty-state warning">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor" opacity="0.5">
+          <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.43-.98 2.63-2.31 2.98l1.46 1.46C20.88 15.61 22 13.95 22 12c0-2.76-2.24-5-5-5zm-1 4h-2.19l2 2H16zM2 4.27l3.11 3.11C3.29 8.12 2 9.91 2 12c0 2.76 2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1 0-1.59 1.21-2.9 2.76-3.07L8.73 11H8v2h2.73L13 15.27V17h1.73l4.01 4L20 19.74 3.27 3 2 4.27z"/>
+        </svg>
+        <p>所有用户已断开</p>
+        <span>等待重新连接...</span>
+      </div>
+    `;
+    
+    // 生成用户列表HTML
+    const usersHTML = sortedUsers.map(u => {
+      let statusClass, statusText, statusIcon;
+      
+      if (u.isMe) {
+        statusClass = 'connected';
+        statusText = '在线';
+        statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>`;
+      } else {
+        const connectionState = u.getConnectionState();
+        
+        if (connectionState === 'connected') {
+          statusClass = 'connected';
+          statusText = '已连接';
+          statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+        } else if (connectionState === 'connecting' || connectionState === 'new') {
+          statusClass = 'connecting';
+          statusText = '连接中';
+          statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>`;
+        } else {
+          statusClass = 'disconnected';
+          statusText = '未连接';
+          statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.43-.98 2.63-2.31 2.98l1.46 1.46C20.88 15.61 22 13.95 22 12c0-2.76-2.24-5-5-5zm-1 4h-2.19l2 2H16zM2 4.27l3.11 3.11C3.29 8.12 2 9.91 2 12c0 2.76 2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1 0-1.59 1.21-2.9 2.76-3.07L8.73 11H8v2h2.73L13 15.27V17h1.73l4.01 4L20 19.74 3.27 3 2 4.27z"/></svg>`;
+        }
+      }
+      
+      const displayName = u.nickname || u.id;
+      
+      return `
+        <li class="user-item ${u.isMe ? 'user-me' : ''}">
+          <span class="connection-status ${statusClass}" title="${statusText}">
+            ${statusIcon}
+          </span>
+          <div class="user-info">
+            <div class="user-name">${displayName}${u.isMe ? '（我）' : ''}</div>
+            <div class="user-status-text">${statusText}</div>
+          </div>
+        </li>
+      `;
+    }).join('');
+    
+    document.querySelector('#users').innerHTML = statsHTML + emptyStateHTML + usersHTML;
+    return;
+  }
+  
+  // 生成用户列表HTML
+  const usersHTML = sortedUsers.map(u => {
+    let statusClass, statusText, statusIcon;
+    
+    if (u.isMe) {
+      statusClass = 'connected';
+      statusText = '在线';
+      statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>`;
+    } else {
+      const connectionState = u.getConnectionState();
+      
+      if (connectionState === 'connected') {
+        statusClass = 'connected';
+        statusText = '已连接';
+        statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+      } else if (connectionState === 'connecting' || connectionState === 'new') {
+        statusClass = 'connecting';
+        statusText = '连接中';
+        statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>`;
+      } else {
+        statusClass = 'disconnected';
+        statusText = '未连接';
+        statusIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.43-.98 2.63-2.31 2.98l1.46 1.46C20.88 15.61 22 13.95 22 12c0-2.76-2.24-5-5-5zm-1 4h-2.19l2 2H16zM2 4.27l3.11 3.11C3.29 8.12 2 9.91 2 12c0 2.76 2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1 0-1.59 1.21-2.9 2.76-3.07L8.73 11H8v2h2.73L13 15.27V17h1.73l4.01 4L20 19.74 3.27 3 2 4.27z"/></svg>`;
+      }
+    }
     
     const displayName = u.nickname || u.id;
     
     return `
-      <li>
-        <span class="connection-status ${statusClass}">
+      <li class="user-item ${u.isMe ? 'user-me' : ''}">
+        <span class="connection-status ${statusClass}" title="${statusText}">
           ${statusIcon}
         </span>
-        ${displayName}${u.isMe?'（我）':''}
+        <div class="user-info">
+          <div class="user-name">${displayName}${u.isMe ? '（我）' : ''}</div>
+          <div class="user-status-text">${statusText}</div>
+        </div>
       </li>
     `;
   }).join('');
+  
+  document.querySelector('#users').innerHTML = statsHTML + usersHTML;
 }
 
 function enterTxt(event) {
@@ -625,9 +813,9 @@ async function confirmSendFile() {
         await user.sendFile(fileInfo, pendingFile, onProgress);
       }
       
-      // 使用昵称显示在聊天记录中
+      // 使用昵称显示在聊天记录中，不显示复制按钮
       const displayNames = selectedUsers.map(u => u.nickname || u.id).join(', ');
-      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayNames})`);
+      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayNames})`, { noCopyButton: true });
     } catch (error) {
       console.error('发送文件失败:', error);
       alert('发送文件失败，请重试');
