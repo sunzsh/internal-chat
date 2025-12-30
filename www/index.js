@@ -332,12 +332,19 @@ function addChatItem(uid, message, options = {}) {
   }
   
   const copyText = message;
-  let msg = message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  // 判断是否url，兼容端口号和带参数的网址
-  if (/(http|https):\/\/[^\s<>"']+/g.test(msg)) {
-    msg = msg.replace(/(http|https):\/\/[^\s<>"']+/g, (url) => {
-      return `<a href="${url}" target="_blank">${url}</a>`;
-    });
+  let msg;
+  
+  // 系统消息允许HTML（用于用户名高亮）
+  if (isSystem && options.allowHtml) {
+    msg = message;
+  } else {
+    msg = message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // 判断是否url，兼容端口号和带参数的网址
+    if (/(http|https):\/\/[^\s<>"']+/g.test(msg)) {
+      msg = msg.replace(/(http|https):\/\/[^\s<>"']+/g, (url) => {
+        return `<a href="${url}" target="_blank">${url}</a>`;
+      });
+    }
   }
 
   // 格式化时间戳
@@ -381,6 +388,11 @@ function sendMessage(msg) {
     u.sendMessage(message);
   });
   messageInput.value = '';
+  
+  // 发送后更新按钮状态
+  if (typeof updateSendButtonState === 'function') {
+    updateSendButtonState();
+  }
 }
 
 async function sendFile(file) {
@@ -484,6 +496,22 @@ function refreshUsers(data) {
       
       xchatUser.onConnectionStateChange = (state) => {
         console.log(`User ${xchatUser.id} connection state: ${state}`);
+        
+        // 添加状态变化通知 - 简洁版本
+        const displayName = xchatUser.nickname || xchatUser.id;
+        let notificationMessage = '';
+        
+        if (state === 'connected') {
+          notificationMessage = `<span class="user-highlight">${displayName}</span> 已连接`;
+        } else if (state === 'disconnected' || state === 'failed') {
+          notificationMessage = `<span class="user-highlight">${displayName}</span> 已断开`;
+        }
+        
+        // 显示通知消息（不显示"连接中"状态，太频繁）
+        if (notificationMessage) {
+          addChatItem('system', notificationMessage, { allowHtml: true });
+        }
+        
         refreshUsersHTML();
       };
       
@@ -869,6 +897,26 @@ document.querySelector('.send-btn').addEventListener('click', () => {
   if (messageInput.value.trim()) {  // 只有当消息不为空时才发送
     sendMessage();
   }
+});
+
+// 监听输入框内容变化，动态更新发送按钮状态
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.querySelector('.send-btn');
+
+function updateSendButtonState() {
+  const hasContent = messageInput.value.trim().length > 0;
+  sendBtn.disabled = !hasContent;
+}
+
+// 初始化按钮状态
+updateSendButtonState();
+
+// 监听输入事件
+messageInput.addEventListener('input', updateSendButtonState);
+messageInput.addEventListener('keyup', updateSendButtonState);
+messageInput.addEventListener('paste', () => {
+  // 粘贴后需要延迟一下才能获取到新内容
+  setTimeout(updateSendButtonState, 10);
 });
 
 function showNicknameModal() {
