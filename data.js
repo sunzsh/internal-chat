@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function getCookieValue(socket) {
   try {
     // 尝试从不同的可能位置获取 cookie
@@ -70,13 +72,23 @@ function getPublicRoomIdByKey(key) {
 
 function registerUser(ip, roomId, socket) {
   const key = getKey(ip, roomId);
-  const room = data[key]
-  if (!room) {
-    data[key] = []
+  if (!data[key]) {
+    data[key] = [];
   }
-  let id = `${Math.floor(Math.random() * 1000000).toString().substring(3,5).padStart(2, '0')}${(new Date()).getMilliseconds().toString().padStart(3, '0')}`
-  while (data[id]) {
-    id = `${Math.floor(Math.random() * 1000000).toString().substring(3,5).padStart(2, '0')}${(new Date()).getMilliseconds().toString().padStart(3, '0')}`
+
+  const roomUsers = data[key];
+  let id = '';
+  do {
+    const timePart = Date.now().toString(36).slice(-5);
+    const randomPart = Math.floor(Math.random() * 1679616).toString(36).padStart(4, '0'); // 36^4
+    id = `${timePart}${randomPart}`;
+    if (id.length > 10) {
+      id = id.substring(id.length - 10);
+    }
+  } while (roomUsers.some(user => user.id === id));
+
+  if (!id) {
+    id = crypto.randomUUID().replace(/-/g, '').substring(0, 10);
   }
   const nickname = getCookieValue(socket);
   data[key].push({ id, socket, targets: {}, nickname })

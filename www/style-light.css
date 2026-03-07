@@ -133,12 +133,31 @@ body {
 
 .network-popover {
   margin-top: 0.5rem;
-  width: 300px;
+  width: 320px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.97);
   box-shadow: var(--shadow-lg);
   padding: 0.625rem 0.75rem;
+}
+
+.network-mode-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.network-row-wrap {
+  border-bottom: 1px dashed var(--border-color);
+  padding: 0.2rem 0;
+}
+
+.network-row-wrap:last-of-type {
+  border-bottom: none;
 }
 
 .network-row {
@@ -148,6 +167,14 @@ body {
   font-size: 0.8125rem;
   color: var(--text-secondary);
   line-height: 1.8;
+}
+
+.network-row-detail {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-top: -0.1rem;
+  margin-bottom: 0.25rem;
 }
 
 .network-actions {
@@ -160,6 +187,12 @@ body {
 }
 
 .network-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.network-speed-note {
+  margin-top: 0.45rem;
   font-size: 0.75rem;
   color: var(--text-muted);
 }

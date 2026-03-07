@@ -471,6 +471,9 @@
       },
 
       shouldSendCandidate(candidate) {
+        if (this.currentMode !== 'lan') {
+          return true;
+        }
         const info = core.parseCandidateInfo(candidate);
         if (!info.raw) {
           return true;
@@ -666,8 +669,9 @@
 
       resetNetworkHealth() {
         const relayConfigured = this.getRelayConfigured();
+        const appStore = useAppStore();
         if (networkHealth.summarizePaths) {
-          this.networkHealth = networkHealth.summarizePaths([], relayConfigured);
+          this.networkHealth = networkHealth.summarizePaths([], relayConfigured, appStore.currentMode);
           return;
         }
         this.networkHealth = {
@@ -679,11 +683,12 @@
 
       updateNetworkHealthSummary() {
         const relayConfigured = this.getRelayConfigured();
+        const appStore = useAppStore();
         const paths = this.users
           .filter(user => !user.isMe && user.connected && user.networkPath)
           .map(user => user.networkPath);
         if (networkHealth.summarizePaths) {
-          this.networkHealth = networkHealth.summarizePaths(paths, relayConfigured);
+          this.networkHealth = networkHealth.summarizePaths(paths, relayConfigured, appStore.currentMode);
           return;
         }
         this.networkHealth = {
@@ -724,14 +729,29 @@
         try {
           const stats = await user.rtcConn.getStats();
           let selectedPair = null;
+          const selectedPairIds = [];
           stats.forEach(report => {
-            if (report.type !== 'candidate-pair') {
-              return;
-            }
-            if (report.selected || report.nominated) {
-              selectedPair = report;
+            if (report.type === 'transport' && report.selectedCandidatePairId) {
+              selectedPairIds.push(report.selectedCandidatePairId);
             }
           });
+          for (const pairId of selectedPairIds) {
+            const pair = stats.get(pairId);
+            if (pair && pair.type === 'candidate-pair') {
+              selectedPair = pair;
+              break;
+            }
+          }
+          if (!selectedPair) {
+            stats.forEach(report => {
+              if (report.type !== 'candidate-pair') {
+                return;
+              }
+              if (report.state === 'succeeded' && (report.selected || report.nominated)) {
+                selectedPair = report;
+              }
+            });
+          }
           if (!selectedPair) {
             user.speedText = '统计中...';
             user.networkPath = null;
@@ -776,6 +796,16 @@
           .map(user => this.updateUserTransferStats(user));
         await Promise.all(tasks);
         this.updateNetworkHealthSummary();
+      },
+
+      async runManualSpeedTest(sampleCount = 3, intervalMs = 700) {
+        const rounds = Math.max(2, Number(sampleCount) || 2);
+        for (let i = 0; i < rounds; i += 1) {
+          await this.updateTransferStats();
+          if (i < rounds - 1) {
+            await new Promise(resolve => setTimeout(resolve, intervalMs));
+          }
+        }
       },
 
       handleMeInfo(data) {

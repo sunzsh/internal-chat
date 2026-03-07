@@ -23,16 +23,19 @@ module.exports = function runNetworkHealthTests() {
   assert.strictEqual(relayPath.relay, true);
   assert.strictEqual(relayPath.natTraversal, false);
 
-  const emptySummary = networkHealth.summarizePaths([], false);
+  const emptySummary = networkHealth.summarizePaths([], false, 'lan');
   assert.strictEqual(emptySummary.lanDirect, 'unknown');
   assert.strictEqual(emptySummary.natTraversal, 'unknown');
-  assert.strictEqual(emptySummary.relayAvailable, 'warn');
+  assert.strictEqual(emptySummary.relayAvailable, 'down');
 
-  const mixedSummary = networkHealth.summarizePaths([lanPath, natPath], true);
+  const mixedSummary = networkHealth.summarizePaths([lanPath, natPath], true, 'private');
   assert.strictEqual(mixedSummary.lanDirect, 'up');
   assert.strictEqual(mixedSummary.natTraversal, 'up');
   assert.strictEqual(mixedSummary.relayAvailable, 'warn');
 
-  const relaySummary = networkHealth.summarizePaths([relayPath], true);
+  const relaySummary = networkHealth.summarizePaths([relayPath], true, 'public');
   assert.strictEqual(relaySummary.relayAvailable, 'up');
+
+  const publicNoRelaySummary = networkHealth.summarizePaths([natPath], true, 'public');
+  assert.strictEqual(publicNoRelaySummary.relayAvailable, 'down');
 };

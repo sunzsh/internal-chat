@@ -57,8 +57,31 @@
     return false;
   }
 
-  function summarizePaths(paths, relayConfigured) {
+  function normalizeMode(mode) {
+    const value = (mode || '').toString().trim().toLowerCase();
+    if (value === 'lan' || value === 'public' || value === 'private') {
+      return value;
+    }
+    return 'lan';
+  }
+
+  function resolveRelayStatus({ mode, hasRelay, relayConfigured, hasAnyPath }) {
+    if (mode === 'lan' || mode === 'public') {
+      // LAN/公共房间不做中继兜底，未命中 relay 属于预期关闭。
+      return hasRelay ? 'up' : 'down';
+    }
+    if (!hasAnyPath) {
+      return relayConfigured ? 'warn' : 'unknown';
+    }
+    if (hasRelay) {
+      return 'up';
+    }
+    return relayConfigured ? 'warn' : 'down';
+  }
+
+  function summarizePaths(paths, relayConfigured, mode) {
     const list = Array.isArray(paths) ? paths.filter(Boolean) : [];
+    const normalizedMode = normalizeMode(mode);
     const hasLan = list.some(item => item.lanDirect);
     const hasNat = list.some(item => item.natTraversal);
     const hasRelay = list.some(item => item.relay);
@@ -66,13 +89,23 @@
       return {
         lanDirect: 'unknown',
         natTraversal: 'unknown',
-        relayAvailable: 'warn'
+        relayAvailable: resolveRelayStatus({
+          mode: normalizedMode,
+          hasRelay,
+          relayConfigured,
+          hasAnyPath: false
+        })
       };
     }
     return {
       lanDirect: hasLan ? 'up' : 'down',
       natTraversal: hasNat ? 'up' : 'down',
-      relayAvailable: hasRelay ? 'up' : (relayConfigured ? 'warn' : 'warn')
+      relayAvailable: resolveRelayStatus({
+        mode: normalizedMode,
+        hasRelay,
+        relayConfigured,
+        hasAnyPath: true
+      })
     };
   }
 

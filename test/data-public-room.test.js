@@ -32,6 +32,9 @@ module.exports = function runDataPublicRoomTests() {
   const lanA = service.registerUser('192.168.1.10', 'lan:wifi-main', createSocket('lan-a'));
   service.registerUser('192.168.1.11', 'lan:wifi-main', createSocket('lan-b'));
   service.registerUser('192.168.1.12', null, createSocket('lan-auto'));
+  const publicSameRoomUserA = service.registerUser('127.0.0.1', 'public:dup-check', createSocket('dup-a'));
+  const publicSameRoomUserB = service.registerUser('127.0.0.1', 'public:dup-check', createSocket('dup-b'));
+  assert.notStrictEqual(publicSameRoomUserA, publicSameRoomUserB);
   const lanScopedUsers = service.getUserList('192.168.1.20', 'lan:wifi-main');
   assert.strictEqual(lanScopedUsers.length, 2);
   const lanAutoUsers = service.getUserList('192.168.1.20', null);

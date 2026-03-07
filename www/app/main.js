@@ -65,6 +65,50 @@
       const roomHintText = computed(() => userStore.roomHintText);
       const connectedUsersCount = computed(() => userStore.connectedUsersCount);
       const networkHealth = computed(() => userStore.networkHealth || {});
+      const currentModeLabel = computed(() => {
+        if (currentMode.value === 'public') {
+          return '公共房间';
+        }
+        if (currentMode.value === 'private') {
+          return '私有房间';
+        }
+        return '局域网';
+      });
+      const connectedPeerCount = computed(() => users.value.filter(user => {
+        const target = unwrapUser(user);
+        return target && !target.isMe && target.connected;
+      }).length);
+      const speedTestDescription = computed(() => {
+        if (currentMode.value === 'lan') {
+          return '测速按最近约 2 秒的 WebRTC 流量统计，空闲时显示 0B/s 属正常。';
+        }
+        return '测速按最近约 2 秒的 WebRTC 流量统计，公网/NAT 环境下波动会更明显。';
+      });
+      const networkDiagnosticItems = computed(() => {
+        const health = networkHealth.value || {};
+        const mode = currentMode.value;
+        const peers = connectedPeerCount.value;
+        return [
+          {
+            key: 'lanDirect',
+            title: 'LAN直连',
+            status: health.lanDirect || 'unknown',
+            detail: getNetworkHealthDetail('lanDirect', health.lanDirect, mode, peers)
+          },
+          {
+            key: 'natTraversal',
+            title: 'P2P NAT穿透',
+            status: health.natTraversal || 'unknown',
+            detail: getNetworkHealthDetail('natTraversal', health.natTraversal, mode, peers)
+          },
+          {
+            key: 'relayAvailable',
+            title: 'Relay可用',
+            status: health.relayAvailable || 'unknown',
+            detail: getNetworkHealthDetail('relayAvailable', health.relayAvailable, mode, peers)
+          }
+        ];
+      });
 
       onMounted(async () => {
         appStore.initializeApp();
@@ -371,9 +415,61 @@
           return '可用/待验证';
         }
         if (status === 'down') {
-          return '异常';
+          return '不可用';
         }
         return '未检测';
+      }
+
+      function getNetworkHealthDetail(kind, status, mode, connectedPeerCountValue) {
+        const peers = Number(connectedPeerCountValue) || 0;
+        const hasPeers = peers > 0;
+        if (kind === 'lanDirect') {
+          if (status === 'up') {
+            return mode === 'lan'
+              ? '已检测到同网段 host-host 直连，通常延迟最低。'
+              : '当前会话中存在同网段直连路径。';
+          }
+          if (!hasPeers) {
+            return '暂无已连接对端，建立连接后才会更新结果。';
+          }
+          if (mode === 'lan') {
+            return '当前未命中局域网直连，可能不在同网段或被网卡筛选限制。';
+          }
+          return '当前连接未走局域网直连（在公网房间属于常见情况）。';
+        }
+        if (kind === 'natTraversal') {
+          if (status === 'up') {
+            return mode === 'public'
+              ? '已通过 NAT 穿透建立 P2P，公网房间主要依赖此路径。'
+              : '当前连接已出现 NAT 穿透路径。';
+          }
+          if (!hasPeers) {
+            return '暂无已连接对端，建立连接后才会更新结果。';
+          }
+          if (mode === 'public') {
+            return '未检测到 NAT 穿透，通常与双方 NAT/防火墙策略有关。';
+          }
+          return '当前连接未使用 NAT 穿透。';
+        }
+        if (kind === 'relayAvailable') {
+          if (mode === 'lan' || mode === 'public') {
+            if (status === 'up') {
+              return '当前路径出现中继流量。';
+            }
+            return '当前模式不启用中继兜底，连不上会直接失败。';
+          }
+          if (status === 'up') {
+            return '当前已命中 TURN 中继链路。';
+          }
+          if (status === 'warn') {
+            return '已配置 TURN，但当前尚未实际走中继。';
+          }
+          if (!hasPeers) {
+            return '暂无已连接对端，建立连接后才会更新结果。';
+          }
+          return '当前未检测到 TURN 中继路径。';
+        }
+        return '等待检测数据。';
       }
 
       function formatClock(date) {
@@ -387,11 +483,15 @@
         if (manualSpeedTesting.value) {
           return;
         }
+        if (connectedPeerCount.value <= 0) {
+          chatStore.showToast({ type: 'warning', message: '当前没有已连接对端，无法测速' });
+          return;
+        }
         manualSpeedTesting.value = true;
         try {
-          await userStore.updateTransferStats();
+          await userStore.runManualSpeedTest(3, 800);
           lastManualSpeedTestAt.value = formatClock(new Date());
-          chatStore.showToast({ type: 'info', message: '已完成一次手动测速' });
+          chatStore.showToast({ type: 'info', message: '已完成一次手动测速（最近约2秒样本）' });
         } finally {
           manualSpeedTesting.value = false;
         }
@@ -531,6 +631,10 @@
         roomHintText,
         connectedUsersCount,
         networkHealth,
+        currentModeLabel,
+        connectedPeerCount,
+        speedTestDescription,
+        networkDiagnosticItems,
         switchMode,
         reconnect,
         loadPublicRooms,

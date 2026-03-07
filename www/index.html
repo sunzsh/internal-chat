@@ -8,8 +8,8 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://unpkg.com/vue-demi@latest/lib/index.iife.js"></script>
   <script src="https://unpkg.com/pinia@2/dist/pinia.iife.js"></script>
-  <script src="./xchatuser.js?v=28"></script>
-  <link rel="stylesheet" href="./style-light.css?v=28">
+  <script src="./xchatuser.js?v=29"></script>
+  <link rel="stylesheet" href="./style-light.css?v=29">
 </head>
 <body>
   <div id="app">
@@ -51,17 +51,16 @@
       </button>
       <transition name="fade">
         <div v-if="showNetworkPanel" class="network-popover">
-          <div class="network-row">
-            <span>LAN直连</span>
-            <span>{{ healthEmoji(networkHealth.lanDirect) }} {{ healthLabel(networkHealth.lanDirect) }}</span>
+          <div class="network-mode-meta">
+            <span>模式：{{ currentModeLabel }}</span>
+            <span>已连接：{{ connectedPeerCount }}</span>
           </div>
-          <div class="network-row">
-            <span>P2P NAT穿透</span>
-            <span>{{ healthEmoji(networkHealth.natTraversal) }} {{ healthLabel(networkHealth.natTraversal) }}</span>
-          </div>
-          <div class="network-row">
-            <span>Relay可用</span>
-            <span>{{ healthEmoji(networkHealth.relayAvailable) }} {{ healthLabel(networkHealth.relayAvailable) }}</span>
+          <div v-for="item in networkDiagnosticItems" :key="item.key" class="network-row-wrap">
+            <div class="network-row">
+              <span>{{ item.title }}</span>
+              <span>{{ healthEmoji(item.status) }} {{ healthLabel(item.status) }}</span>
+            </div>
+            <div class="network-row-detail">{{ item.detail }}</div>
           </div>
           <div class="network-actions">
             <button class="btn-secondary btn-sm" :disabled="manualSpeedTesting" @click="manualSpeedTest">
@@ -69,7 +68,8 @@
             </button>
             <span v-if="lastManualSpeedTestAt" class="network-time">上次测速：{{ lastManualSpeedTestAt }}</span>
           </div>
-          <div class="network-legend">🟢正常 / 🟡可用待验证 / 🔴异常 / ⚪未检测</div>
+          <div class="network-speed-note">{{ speedTestDescription }}</div>
+          <div class="network-legend">🟢正常 / 🟡可用待验证 / 🔴不可用 / ⚪未检测</div>
         </div>
       </transition>
     </div>
@@ -266,10 +266,10 @@
     </transition>
   </div>
 
-  <script src="./app/core.js?v=28"></script>
-  <script src="./app/peer-state.js?v=28"></script>
-  <script src="./app/network-health.js?v=28"></script>
-  <script src="./app/stores.js?v=28"></script>
-  <script src="./app/main.js?v=28"></script>
+  <script src="./app/core.js?v=29"></script>
+  <script src="./app/peer-state.js?v=29"></script>
+  <script src="./app/network-health.js?v=29"></script>
+  <script src="./app/stores.js?v=29"></script>
+  <script src="./app/main.js?v=29"></script>
 </body>
 </html>
