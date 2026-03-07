@@ -29,6 +29,11 @@
       const networkWidgetRef = ref(null);
       const messagesContainer = ref(null);
       const fileInput = ref(null);
+      const showShareModal = ref(false);
+      const selectedShareHost = ref('');
+      const shareUrl = ref('');
+      const shareQrDataUrl = ref('');
+      const shareQrLoading = ref(false);
       const activeFileTransfer = ref(null);
       let userStateTimer = null;
       let speedTimer = null;
@@ -109,6 +114,26 @@
             detail: getNetworkHealthDetail('relayAvailable', health.relayAvailable, mode, peers)
           }
         ];
+      });
+      const shareHostOptions = computed(() => {
+        const options = [];
+        const existed = new Set();
+        const pushOption = (host, label) => {
+          if (!host || existed.has(host)) {
+            return;
+          }
+          existed.add(host);
+          options.push({ host, label });
+        };
+        const currentHost = window.location.hostname;
+        if (currentHost && currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+          pushOption(currentHost, `${currentHost}（当前访问域名）`);
+        }
+        detectedLocalIps.value.forEach(ip => pushOption(ip, `${ip}（本机局域网 IP）`));
+        if (currentHost) {
+          pushOption(currentHost, `${currentHost}（当前）`);
+        }
+        return options;
       });
 
       onMounted(async () => {
@@ -576,6 +601,166 @@
         showNetworkPanel.value = !showNetworkPanel.value;
       }
 
+      function resolveShareDefaultHost() {
+        const currentHost = window.location.hostname || '';
+        if (currentMode.value === 'lan' && detectedLocalIps.value.length > 0) {
+          return detectedLocalIps.value[0];
+        }
+        if (currentHost) {
+          return currentHost;
+        }
+        return detectedLocalIps.value[0] || '';
+      }
+
+      function formatHostWithPort(host) {
+        const safeHost = (host || '').trim();
+        if (!safeHost) {
+          return '';
+        }
+        const hasPort = /:\d+$/.test(safeHost);
+        const isIPv6 = safeHost.includes(':') && !hasPort && !safeHost.startsWith('[');
+        const normalizedHost = isIPv6 ? `[${safeHost}]` : safeHost;
+        if (hasPort || !window.location.port) {
+          return normalizedHost;
+        }
+        return `${normalizedHost}:${window.location.port}`;
+      }
+
+      function buildShareUrlByHost(host) {
+        const hostWithPort = formatHostWithPort(host);
+        const path = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        return `${window.location.protocol}//${hostWithPort}${path}`;
+      }
+
+      function generateQrDataUrl(text) {
+        return new Promise((resolve, reject) => {
+          const qrLib = window.QRCode;
+          if (!qrLib) {
+            reject(new Error('二维码组件未加载'));
+            return;
+          }
+
+          if (typeof qrLib.toDataURL === 'function') {
+            qrLib.toDataURL(text, {
+              margin: 1,
+              width: 320,
+              errorCorrectionLevel: 'M'
+            }, (error, url) => {
+              if (error) {
+                reject(error);
+                return;
+              }
+              resolve(url);
+            });
+            return;
+          }
+
+          if (typeof qrLib === 'function') {
+            const mount = document.createElement('div');
+            mount.style.position = 'fixed';
+            mount.style.left = '-9999px';
+            mount.style.top = '-9999px';
+            document.body.appendChild(mount);
+
+            const cleanup = () => {
+              if (mount.parentNode) {
+                mount.parentNode.removeChild(mount);
+              }
+            };
+
+            try {
+              const level = qrLib.CorrectLevel ? qrLib.CorrectLevel.M : undefined;
+              new qrLib(mount, {
+                text,
+                width: 320,
+                height: 320,
+                correctLevel: level
+              });
+            } catch (error) {
+              cleanup();
+              reject(error);
+              return;
+            }
+
+            let retries = 0;
+            const resolveWhenReady = () => {
+              const canvas = mount.querySelector('canvas');
+              if (canvas && typeof canvas.toDataURL === 'function') {
+                const url = canvas.toDataURL('image/png');
+                cleanup();
+                resolve(url);
+                return;
+              }
+              const image = mount.querySelector('img');
+              if (image && image.src) {
+                const url = image.src;
+                cleanup();
+                resolve(url);
+                return;
+              }
+
+              retries += 1;
+              if (retries > 30) {
+                cleanup();
+                reject(new Error('二维码渲染超时'));
+                return;
+              }
+              setTimeout(resolveWhenReady, 30);
+            };
+            setTimeout(resolveWhenReady, 10);
+            return;
+          }
+
+          reject(new Error('二维码组件未加载'));
+        });
+      }
+
+      async function refreshShareQr() {
+        if (!selectedShareHost.value) {
+          selectedShareHost.value = resolveShareDefaultHost();
+        }
+        if (!selectedShareHost.value) {
+          chatStore.showToast({ type: 'warning', message: '未检测到可用主机地址' });
+          return;
+        }
+        shareQrLoading.value = true;
+        try {
+          const nextUrl = buildShareUrlByHost(selectedShareHost.value);
+          shareUrl.value = nextUrl;
+          shareQrDataUrl.value = await generateQrDataUrl(nextUrl);
+        } catch (error) {
+          const reason = error && error.message ? error.message : '生成二维码失败';
+          chatStore.showToast({ type: 'error', message: reason });
+        } finally {
+          shareQrLoading.value = false;
+        }
+      }
+
+      async function openShareModal() {
+        if (!detectedLocalIps.value.length) {
+          await refreshNetworkOptions();
+        }
+        selectedShareHost.value = resolveShareDefaultHost();
+        showShareModal.value = true;
+        await refreshShareQr();
+      }
+
+      function closeShareModal() {
+        showShareModal.value = false;
+      }
+
+      async function copyShareUrl() {
+        if (!shareUrl.value) {
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(shareUrl.value);
+          chatStore.showToast({ type: 'success', message: '链接已复制' });
+        } catch (error) {
+          chatStore.showToast({ type: 'warning', message: '复制失败，请手动复制' });
+        }
+      }
+
       function saveNickname() {
         if (!nicknameInput.value.trim()) {
           chatStore.showToast({ type: 'warning', message: '请输入昵称' });
@@ -683,6 +868,12 @@
         manualHostCandidatesOnlyInput,
         showPublicRoomManager,
         showNetworkPanel,
+        showShareModal,
+        selectedShareHost,
+        shareHostOptions,
+        shareUrl,
+        shareQrDataUrl,
+        shareQrLoading,
         manualSpeedTesting,
         lastManualSpeedTestAt,
         networkWidgetRef,
@@ -729,6 +920,10 @@
         healthClass,
         manualSpeedTest,
         toggleNetworkPanel,
+        openShareModal,
+        closeShareModal,
+        refreshShareQr,
+        copyShareUrl,
         previewImage,
         clearHistory,
         removeToast

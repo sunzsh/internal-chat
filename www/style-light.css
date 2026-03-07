@@ -882,6 +882,35 @@ body {
   overflow: hidden;
 }
 
+.share-modal {
+  max-width: 460px;
+}
+
+.share-qr-wrap {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+
+.share-qr-image {
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 6px;
+}
+
+.share-qr-loading {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
