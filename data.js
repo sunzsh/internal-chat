@@ -20,6 +20,8 @@ const data = {
   
 }
 
+const PUBLIC_ROOM_PREFIX = 'public:';
+
 /**
  * 判断给定的 IP 地址是否属于内网或回环地址。
  *
@@ -58,6 +60,14 @@ function getKey(ip, roomId) {
   return isInternalNet ? 'internal' : ip;
 }
 
+function isPublicRoomKey(key) {
+  return typeof key === 'string' && key.startsWith(PUBLIC_ROOM_PREFIX);
+}
+
+function getPublicRoomIdByKey(key) {
+  return key.substring(PUBLIC_ROOM_PREFIX.length);
+}
+
 function registerUser(ip, roomId, socket) {
   const key = getKey(ip, roomId);
   const room = data[key]
@@ -79,7 +89,11 @@ function unregisterUser(ip, roomId, id) {
   if (room) {
     const index = room.findIndex(user => user.id === id)
     if (index !== -1) {
-      return room.splice(index, 1)
+      const removed = room.splice(index, 1);
+      if (room.length === 0) {
+        delete data[key];
+      }
+      return removed;
     }
   }
 }
@@ -94,6 +108,9 @@ function getUserList(ip, roomId) {
 function getUser(ip, roomId, uid) {
   const key = getKey(ip, roomId);
   const room = data[key]
+  if (!room) {
+    return null;
+  }
   return room.find(user => user.id === uid)
 }
 
@@ -110,4 +127,38 @@ function updateNickname(ip, roomId, id, nickname) {
   return false;
 }
 
-module.exports = { registerUser, unregisterUser, getUserList, getUser, updateNickname }
+function getPublicRooms() {
+  return Object.keys(data)
+    .filter(isPublicRoomKey)
+    .map(key => ({
+      roomId: getPublicRoomIdByKey(key),
+      userCount: data[key].length
+    }))
+    .filter(room => room.userCount > 0)
+    .sort((a, b) => a.roomId.localeCompare(b.roomId));
+}
+
+function canJoinPublicRoom(roomId, maxRooms) {
+  const roomKey = `${PUBLIC_ROOM_PREFIX}${roomId}`;
+  if (data[roomKey] && data[roomKey].length > 0) {
+    return true;
+  }
+  return getPublicRooms().length < maxRooms;
+}
+
+function __resetForTest() {
+  for (const key of Object.keys(data)) {
+    delete data[key];
+  }
+}
+
+module.exports = {
+  registerUser,
+  unregisterUser,
+  getUserList,
+  getUser,
+  updateNickname,
+  getPublicRooms,
+  canJoinPublicRoom,
+  __resetForTest
+}

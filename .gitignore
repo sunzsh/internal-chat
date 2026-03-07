@@ -15,6 +15,7 @@ yarn-error.log*
 # Editor directories and files
 .idea
 .vscode
+.kiro
 *.suo
 *.ntvs*
 *.njsproj
@@ -24,3 +25,5 @@ yarn-error.log*
 internal-chat-linux
 internal-chat-macos
 internal-chat-win.exe
+
+

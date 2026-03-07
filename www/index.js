@@ -1,781 +1,694 @@
+const { createApp } = Vue;
+
 const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 const wsUrl = `${wsProtocol}://${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}/ws`;
 
-var users = [];
-var me = new XChatUser();
-
-// 添加当前传输用户的引用
-let currentTransferUser = null;
-let currentNickname = '';
-let roomPassword = ''; // 存储房间密码
-let signalingServer = null;
-
+// MD5 函数
 var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
 
+window.fgdx_configuration = {
+  iceServers: [
+    {
+      urls: ['stun:74.125.250.129:19302']
+    }
+  ],
+  iceTransportPolicy: 'all',
+  iceCandidatePoolSize: 10
+};
 
-// 初始化页面
-function initPage() {
-  // 检测WebRTC支持
-  if (!window.RTCPeerConnection && !window.webkitRTCPeerConnection) {
-    addChatItem('system', '您的浏览器不支持WebRTC，请使用Chrome、Firefox、Safari等现代浏览器访问。');
-    return;
-  }
-
-  const roomId = window.location.pathname.split('/')[1];
-  if (roomId) {
-    // 如果有roomId，显示密码输入框并隐藏主界面
-    document.querySelector('.left').style.display = 'none';
-    document.querySelector('.right').style.display = 'none';
-    document.getElementById('passwordModal').style.display = 'block';
-    
-    // 添加回车事件监听
-    const passwordInput = document.getElementById('roomPasswordInput');
-    passwordInput.onkeydown = (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        submitRoomPassword();
-      }
+createApp({
+  data() {
+    return {
+      // 连接状态
+      signalingServer: null,
+      me: new XChatUser(),
+      users: [],
+      
+      // UI 状态
+      currentMode: 'lan',
+      isDragging: false,
+      showNicknameModal: false,
+      showPasswordModal: false,
+      
+      // 输入
+      messageInput: '',
+      nicknameInput: '',
+      passwordInput: '',
+      newRoomName: '',
+      
+      // 消息和房间
+      messages: [],
+      publicRooms: [],
+      currentPublicRoomId: null,
+      privateRoomId: null,
+      roomPassword: '',
+      
+      // 其他
+      currentNickname: '',
+      keepaliveTimer: null,
+      publicRoomsRefreshTimer: null,
+      roomHintText: '公共房间最多 5 个',
+      baseIceServers: JSON.parse(JSON.stringify(window.fgdx_configuration.iceServers || []))
     };
-    // 自动聚焦密码输入框 
-    // 判断是否非移动端
-    if (!navigator.userAgent.match(/Android/i) && !navigator.userAgent.match(/iPhone/i) && !navigator.userAgent.match(/iPad/i) && !navigator.userAgent.match(/iPod/i)) {
-      setTimeout(() => passwordInput.focus(), 0);
-    }
-  } else {
-    // 没有roomId，显示主界面
-    document.querySelector('.left').style.display = 'flex';
-    document.querySelector('.right').style.display = 'block';
-    document.getElementById('passwordModal').style.display = 'none';
-    // 连接WebSocket
-    connectWebSocket();
-  }
-}
-
-// 提交房间密码
-function submitRoomPassword() {
-  const passwordInput = document.getElementById('roomPasswordInput');
-  roomPassword = passwordInput.value;
-  
-  if (!roomPassword) {
-    alert('请输入密码');
-    return;
-  } else {
-    roomPassword = MD5(roomPassword);
-  }
-  
-  // 隐藏密码输入框，显示主界面
-  document.getElementById('passwordModal').style.display = 'none';
-  document.querySelector('.left').style.display = 'flex';
-  document.querySelector('.right').style.display = 'block';
-  
-  // 连接WebSocket
-  connectWebSocket();
-}
-
-// 连接WebSocket
-function connectWebSocket() {
-  const roomId = window.location.pathname.split('/')[1];
-  const wsUrlWithPassword = wsUrl.replace(/\/$/g, '') + '/' + roomId + (roomPassword ? '/' + roomPassword : '');
-  signalingServer = new WebSocket(wsUrlWithPassword);
-  
-  signalingServer.onopen = () => {
-    console.log('Connected to signaling server');
+  },
+  computed: {
+    channelInfoText() {
+      if (this.currentMode === 'public') {
+        const roomPart = this.currentPublicRoomId ? ` / 房间：${this.currentPublicRoomId}` : ' / 未进入房间';
+        return `当前模式：公共房间${roomPart}`;
+      }
+      if (this.currentMode === 'private') {
+        return `当前模式：私有房间${this.privateRoomId ? ` / ${this.privateRoomId}` : ''}`;
+      }
+      return '当前模式：局域网';
+    },
     
-    // 读取保存的昵称
-    const match = document.cookie.match(/nickname=([^;]+)/);
-    if (match) {
-      currentNickname = decodeURIComponent(match[1]);
-    }
+    connectionStatus() {
+      return this.signalingServer && this.signalingServer.readyState === WebSocket.OPEN ? 'connected' : 'disconnected';
+    },
     
-    setInterval(() => {
-      signalingServer.send(JSON.stringify({type: '9999'}));
-    }, 1000 * 10);
-  }
-
-  signalingServer.onmessage = ({ data: responseStr }) => {
-    const response = JSON.parse(responseStr);
-    const { type, data } = response;
-
-    if (type === '1001') {
-      me.id = data.id;
-      me.roomId = data.roomId;
-      if (roomId && me.roomId !== roomId) {
-        addChatItem('system', '房间密码错误，已切换至内网频道');
+    connectedUsers() {
+      return this.users.filter(u => u.connected);
+    }
+  },
+  
+  mounted() {
+    this.initPage();
+    this.setupDragAndDrop();
+  },
+  
+  beforeUnmount() {
+    this.disconnectSignaling();
+  },
+  
+  methods: {
+    // 初始化
+    initPage() {
+      if (!window.RTCPeerConnection && !window.webkitRTCPeerConnection) {
+        this.addSystemMessage('您的浏览器不支持WebRTC，请使用Chrome、Firefox、Safari等现代浏览器访问。');
         return;
       }
-      if (data.turns && data.turns.length > 0) {
-        window.fgdx_configuration.iceServers.push(...data.turns)
+
+      this.privateRoomId = window.location.pathname.split('/')[1];
+      if (this.privateRoomId) {
+        this.currentMode = 'private';
+        this.showPasswordModal = true;
+      } else {
+        this.currentMode = 'lan';
+        this.connectWebSocket();
       }
-      // 如果有保存的昵称，发送给服务器
-      if (currentNickname) {
-        signalingServer.send(JSON.stringify({
-          uid: me.id,
-          targetId: me.id,
-          type: '9004',
-          data: { nickname: currentNickname }
-        }));
+      
+      // 读取保存的昵称
+      const match = document.cookie.match(/nickname=([^;]+)/);
+      if (match) {
+        this.currentNickname = decodeURIComponent(match[1]);
+        this.nicknameInput = this.currentNickname;
       }
-      return;
-    }
-    if (type === '1002') {
-      refreshUsers(data);
-      return;
-    }
-    if (type === '1003') {
-      joinedRoom()
-      return;
-    }
-    if (type === '1004') {
-      addCandidate(data);
-      return;
-    }
-    if (type === '1005') {
-      joinConnection(data);
-      return;
-    }
-    if (type === '1006') {
-      joinedConnection(data);
-      return;
-    }
-    if (type === '1007') {
-      const user = users.find(u => u.id === data.id);
-      if (user) {
-        user.nickname = data.nickname;
-        refreshUsersHTML();
-      }
-      return;
-    }
-  }
-
-  signalingServer.onerror = (error) => {
-    console.error('WebSocket error:', error);
-    if (error.target.readyState === WebSocket.CLOSED) {
-      alert('密码错误或连接失败');
-      // 显示密码输入框，隐藏主界面
-      document.querySelector('.left').style.display = 'none';
-      document.querySelector('.right').style.display = 'none';
-      document.getElementById('passwordModal').style.display = 'block';
-      document.getElementById('roomPasswordInput').value = '';
-      document.getElementById('roomPasswordInput').focus();
-    }
-  };
-}
-
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', initPage);
-
-function setRemote() {
-  me.setRemoteSdp(remoteSDP.value);
-}
-
-async function copy(e, msg) {
-  const currentTarget = e.currentTarget
-  function copySuccess() {
-    currentTarget.innerHTML = `
-      <svg viewBox="0 0 1024 1024" width="20" height="21"><path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5L207 474a32 32 0 0 0-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1.4-12.8-6.3-12.8z" fill="currentColor"></path></svg>
-    `
-    const timer = setTimeout(() => {
-      currentTarget.innerHTML = `
-        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"></path></svg>
-      `
-      clearTimeout(timer)
-    }, 1000);
-  }
-  function fallbackCopy() {
-    const textarea = document.createElement('textarea');
-    textarea.value = msg;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    copySuccess()
-  }
-  try {
-    await navigator.clipboard.writeText(msg);
-    copySuccess()
-  } catch (error) {
-    fallbackCopy()
-  }
-}
-
-function addLinkItem(uid, file) {
-  const chatBox = document.querySelector('.chat-wrapper');
-  const chatItem = document.createElement('div');
-  chatItem.className = 'chat-item';
-  
-  const user = users.find(u => u.id === uid);
-  const displayName = user?.nickname || uid;
-  
-  // 检查是否是图片文件
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
-  
-  let contentHtml = '';
-  if (isImage) {
-    contentHtml = `
-      <div class="image-preview">
-        <img src="${file.url}" alt="${file.name}" />
-      </div>
-      <button class="copy-btn" onclick="this.parentElement.querySelector('a').click()">
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
-        </svg>
-      </button>
-      <a href="${file.url}" download="${file.name}" style="display: none;"></a>
-    `;
-  } else {
-    contentHtml = `<a class="file" href="${file.url}" download="${file.name}">[文件] ${file.name}</a>`;
-  }
-  
-  chatItem.innerHTML = `
-    <div class="chat-item_user">${uid === me.id ? '（我）': ''}${displayName} :</div>
-    <div class="chat-item_content">${contentHtml}</div>
-  `;
-  
-  // 如果是图片，添加点击事件和加载完成后的滚动
-  if (isImage) {
-    const img = chatItem.querySelector('img');
-    img.onclick = function() {
-      // 创建一个新的图片元素来预览
-      const previewImg = new Image();
-      previewImg.src = this.src;
-      
-      // 等待图片加载完成
-      previewImg.onload = function() {
-        // 创建一个新的窗口
-        const previewWindow = window.open('', '_blank');
-        if (previewWindow) {
-          // 设置预览窗口的内容
-          previewWindow.document.write(`
-            <html>
-              <head>
-                <title>${file.name}</title>
-                <style>
-                  body {
-                    margin: 0;
-                    padding: 20px;
-                    background: #1a1a1a;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
-                  }
-                  img {
-                    max-width: 100%;
-                    max-height: 90vh;
-                    object-fit: contain;
-                  }
-                </style>
-              </head>
-              <body>
-                <img src="${previewImg.src}" alt="${file.name}" />
-              </body>
-            </html>
-          `);
-          previewWindow.document.close();
-        }
-      };
-    };
-
-    // 等待图片加载完成后再滚动
-    img.onload = function() {
-      chatBox.scrollTop = chatBox.scrollHeight;
-    };
-  }
-  
-  chatBox.appendChild(chatItem);
-  
-  // 如果不是图片，立即滚动
-  if (!isImage) {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-}
-
-function addChatItem(uid, message) {
-  // 如果是系统控制消息（以##开头），不显示在聊天记录中
-  try {
-    if (typeof message === 'string' && message.startsWith('##')) {
-      return;
-    }
-    const parsed = JSON.parse(message);
-    if (parsed.type && parsed.type.startsWith('##')) {
-      return;
-    }
-  } catch {
-    // 不是JSON消息，继续正常处理
-  }
-
-  const chatBox = document.querySelector('.chat-wrapper');
-  const chatItem = document.createElement('div');
-  chatItem.className = 'chat-item';
-  const copyText = message;
-  let msg = message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  // 判断是否url，兼容端口号和带参数的网址
-  if (/(http|https):\/\/[^\s<>"']+/g.test(msg)) {
-    msg = msg.replace(/(http|https):\/\/[^\s<>"']+/g, (url) => {
-      return `<a href="${url}" target="_blank">${url}</a>`;
-    });
-  }
-
-  const user = users.find(u => u.id === uid);
-  const displayName = uid === 'system' ? '系统' : (user?.nickname || uid);
-  const isSystem = uid === 'system';
-
-  const copyButton = document.createElement('button')
-  copyButton.className = 'copy-btn'
-  copyButton.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"></path></svg>'
-  copyButton.onclick = function () {
-    copy(event,copyText)
-  }
-
-  chatItem.innerHTML = `
-    <div class="chat-item_user ${isSystem ? 'system' : ''}">${!isSystem && uid === me.id ? '（我）': ''}${displayName} :</div>
-    <div class="chat-item_content">
-      <pre>${msg}</pre>
-    </div>
-  `;
-  if (!isSystem) {
-    chatItem.querySelector('.chat-item_content').appendChild(copyButton);
-  }
-  chatBox.appendChild(chatItem);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-function sendMessage(msg) {
-  const message = msg ?? messageInput.value;
-  addChatItem(me.id, message);
-  users.forEach(u => {
-    if (u.isMe) {
-      return;
-    }
-    u.sendMessage(message);
-  });
-  messageInput.value = '';
-}
-
-async function sendFile(file) {
-  pendingFile = file;
-  
-  const otherUsers = users.filter(u => !u.isMe);
-  
-  if (otherUsers.length === 1) {
-    const modal = document.getElementById('userSelectModal');
-    const progressContainer = modal.querySelector('.progress-container');
-    const progressBar = modal.querySelector('.progress-bar-inner');
-    const progressText = modal.querySelector('.progress-text');
+    },
     
-    try {
-      const user = otherUsers[0];
-      currentTransferUser = user;
-      const fileInfo = { name: file.name, size: file.size };
-      
-      // 显示进度条
-      modal.style.display = 'block';
-      document.getElementById('userSelectList').style.display = 'none';
-      modal.querySelector('.modal-footer').style.display = 'block';
-      modal.querySelector('.modal-footer button:last-child').style.display = 'none';
-      progressContainer.style.display = 'block';
-      
-      // 创建进度回调
-      const onProgress = (sent, total) => {
-        const progress = (sent / total) * 100;
-        progressBar.style.width = progress + '%';
-        // 计算传输速度
-        const speed = sent / (Date.now() - startTime) * 1000; // 字节/秒
-        const speedText = speed > 1024 * 1024 
-          ? `${(speed / (1024 * 1024)).toFixed(2)} MB/s`
-          : `${(speed / 1024).toFixed(2)} KB/s`;
-        const displayName = user.nickname || user.id;
-        progressText.textContent = `正在发送给 ${displayName}... ${speedText}`;
-      };
-      
-      const startTime = Date.now();
-      await user.sendFile(fileInfo, file, onProgress);
-      const displayName = user.nickname || user.id;
-      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayName})`);
-    } catch (error) {
-      console.error('发送文件失败:', error);
-      alert('发送文件失败，请重试');
-    } finally {
-      currentTransferUser = null;
-      // 恢复界面状态
-      modal.style.display = 'none';
-      document.getElementById('userSelectList').style.display = 'block';
-      modal.querySelector('.modal-footer').style.display = 'block';
-      modal.querySelector('.modal-footer button:last-child').style.display = 'inline-block';
-      progressContainer.style.display = 'none';
-      progressBar.style.width = '0%';
-    }
-    
-    pendingFile = null;
-    return;
-  }
-  
-  showUserSelectModal();
-}
-function registCandidate() {
-  for (const ca of JSON.parse(candidate.value)) {
-    me.addIceCandidate(ca);
-  }
-}
-
-
-function connectAllOther() {
-  if (users.length <= 1) {
-    return;
-  }
-  const targets = users.filter(u => u.id !== me.id);
-  for (const target of targets) {
-    target.onicecandidate = (candidate) => {
-      // console.log('candidate', candidate);
-      signalingServer.send(JSON.stringify({uid: me.id, targetId: target.id, type: '9001', data: { candidate }}));
-    }
-    target.createConnection().then(() => {
-      // console.log('targetAddr', target.connAddressMe);
-      signalingServer.send(JSON.stringify({uid: me.id, targetId: target.id, type: '9002', data: { targetAddr: target.connAddressMe }}));
-    })
-  }
-}
-
-
-function refreshUsers(data) {
-  resUsers = data.map(
-    u => {
-      let uOld = users.find(uOld => uOld.id === u.id)
-      if (uOld) {
-        // 保持原有昵称
-        u.nickname = u.nickname || uOld.nickname;
-        return uOld;
-      }
-      let xchatUser = new XChatUser();
-      xchatUser.id = u.id;
-      xchatUser.isMe = u.id === me.id;
-      xchatUser.nickname = u.nickname; // 设置昵称
-      
-      xchatUser.onConnectionStateChange = (state) => {
-        console.log(`User ${xchatUser.id} connection state: ${state}`);
-        refreshUsersHTML();
-      };
-      
-      return xchatUser;
-    }
-  );
-
-  // 找出删除的用户
-  const delUsers = users.filter(u => !resUsers.find(u2 => u2.id === u.id));
-  delUsers.forEach(u => {
-    u.closeConnection();
-  });
-
-  users = resUsers;
-  for (const u of users) {
-    u.onmessage = (msg) => {
-      addChatItem(u.id, msg);
-    }
-    u.onReviceFile = (file) => {
-      addLinkItem(u.id, file);
-    }
-  }
-  refreshUsersHTML();
-}
-
-function joinedRoom() {
-  connectAllOther();
-}
-
-function addCandidate(data) {
-  users.find(u => u.id === data.targetId).addIceCandidate(data.candidate);
-}
-async function joinConnection(data) {
-  const user = users.find(u => u.id === data.targetId)
-  if (!user) {
-    return;
-  }
-  user.onicecandidate = (candidate) => {
-    // console.log('candidate', candidate);
-    signalingServer.send(JSON.stringify({uid: me.id, targetId: user.id, type: '9001', data: { candidate }}));
-  }
-  await user.connectTarget(data.offer.sdp)
-  signalingServer.send(JSON.stringify({uid: me.id, targetId: user.id, type: '9003', data: { targetAddr: user.connAddressMe }}));
-}
-
-async function joinedConnection(data) {
-  const target = users.find(u => u.id === data.targetId)
-  if (!target) {
-    return;
-  }
-  await target.setRemoteSdp(data.answer.sdp);
-  refreshUsersHTML();
-}
-
-function refreshUsersHTML() {
-  document.querySelector('#users').innerHTML = users.map(u => {
-    const isConnected = u.isMe || u.isConnected();
-    console.log(isConnected, '----');
-    const statusClass = isConnected ? 'connected' : 'disconnected';
-    const statusIcon = isConnected ? 
-      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>` : 
-      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1 0 1.43-.98 2.63-2.31 2.98l1.46 1.46C20.88 15.61 22 13.95 22 12c0-2.76-2.24-5-5-5zm-1 4h-2.19l2 2H16zM2 4.27l3.11 3.11C3.29 8.12 2 9.91 2 12c0 2.76 2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1 0-1.59 1.21-2.9 2.76-3.07L8.73 11H8v2h2.73L13 15.27V17h1.73l4.01 4L20 19.74 3.27 3 2 4.27z"/></svg>`;
-    
-    const displayName = u.nickname || u.id;
-    
-    return `
-      <li>
-        <span class="connection-status ${statusClass}">
-          ${statusIcon}
-        </span>
-        ${displayName}${u.isMe?'（我）':''}
-      </li>
-    `;
-  }).join('');
-}
-
-function enterTxt(event) {
-  if (event.ctrlKey || event.shiftKey) {
-    return;
-  }
-  if (event.keyCode === 13) {
-    sendMessage();
-    event.preventDefault();
-  }
-}
-
-function showUserSelectModal() {
-  const modal = document.getElementById('userSelectModal');
-  const userList = document.getElementById('userSelectList');
-  
-  // 清空之前的列表
-  userList.innerHTML = '';
-  
-  // 添加用户选项
-  users.forEach(user => {
-    if (!user.isMe) {
-      const item = document.createElement('div');
-      item.className = 'user-select-item';
-      const displayName = user.nickname || user.id;
-      
-      item.innerHTML = `
-        <label>
-          <input type="checkbox" value="${user.id}">
-          <span>${displayName}</span>
-        </label>
-      `;
-      
-      // 点击整行时切换复选框状态
-      item.addEventListener('click', (e) => {
-        const checkbox = item.querySelector('input[type="checkbox"]');
-        if (e.target === checkbox) return;
-        checkbox.checked = !checkbox.checked;
+    // 拖拽上传
+    setupDragAndDrop() {
+      document.addEventListener('dragover', (e) => {
         e.preventDefault();
+        this.isDragging = true;
       });
       
-      userList.appendChild(item);
-    }
-  });
-  
-  modal.style.display = 'block';
-}
-
-function cancelSendFile() {
-  if (currentTransferUser) {
-    currentTransferUser.cancelTransfer();
-  }
-  const modal = document.getElementById('userSelectModal');
-  modal.style.display = 'none';
-  pendingFile = null;
-  currentTransferUser = null;
-}
-
-async function confirmSendFile() {
-  const modal = document.getElementById('userSelectModal');
-  const sendButton = modal.querySelector('.modal-footer button:last-child');
-  const progressContainer = modal.querySelector('.progress-container');
-  const progressBar = modal.querySelector('.progress-bar-inner');
-  const progressText = modal.querySelector('.progress-text');
-  const userList = document.getElementById('userSelectList');
-  const selectedUsers = Array.from(document.querySelectorAll('#userSelectList input[type="checkbox"]:checked'))
-    .map(checkbox => users.find(u => u.id === checkbox.value));
-  
-  if (selectedUsers.length > 0 && pendingFile) {
-    sendButton.disabled = true;
-    sendButton.textContent = '发送中...';
-    userList.style.display = 'none';
-    progressContainer.style.display = 'block';
-    
-    try {
-      const fileInfo = { name: pendingFile.name, size: pendingFile.size };
-      const totalUsers = selectedUsers.length;
-      const startTime = Date.now();
+      document.addEventListener('dragleave', (e) => {
+        if (e.target === document.body || e.target === document.documentElement) {
+          this.isDragging = false;
+        }
+      });
       
-      for (let i = 0; i < selectedUsers.length; i++) {
-        const user = selectedUsers[i];
-        const displayName = user.nickname || user.id;
-        progressText.textContent = `正在发送给 ${displayName}... (${i + 1}/${totalUsers})`;
+      document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        this.isDragging = false;
         
-        const onProgress = (sent, total) => {
-          const userProgress = (sent / total) * 100;
-          const totalProgress = ((i * 100) + userProgress) / totalUsers;
-          progressBar.style.width = totalProgress + '%';
-          // 计算传输速度
-          const speed = sent / (Date.now() - startTime) * 1000; // 字节/秒
-          const speedText = speed > 1024 * 1024 
-            ? `${(speed / (1024 * 1024)).toFixed(2)} MB/s`
-            : `${(speed / 1024).toFixed(2)} KB/s`;
-          progressText.textContent = `正在发送给 ${displayName}... (${i + 1}/${totalUsers}) ${speedText}`;
+        if (e.dataTransfer.files.length > 0) {
+          this.handleFileUpload(e.dataTransfer.files[0]);
+        }
+      });
+    },
+    
+    // WebSocket 连接
+    connectWebSocket() {
+      const wsUrlWithPassword = this.getCurrentWsUrl();
+      if (!wsUrlWithPassword) {
+        return;
+      }
+      
+      this.signalingServer = new WebSocket(wsUrlWithPassword);
+      
+      this.signalingServer.onopen = () => {
+        console.log('Connected to signaling server');
+        
+        this.clearKeepalive();
+        this.keepaliveTimer = setInterval(() => {
+          if (this.signalingServer && this.signalingServer.readyState === WebSocket.OPEN) {
+            this.signalingServer.send(JSON.stringify({type: '9999'}));
+          }
+        }, 10000);
+        
+        // 发送昵称
+        if (this.currentNickname) {
+          setTimeout(() => {
+            this.signalingServer.send(JSON.stringify({
+              uid: this.me.id,
+              targetId: this.me.id,
+              type: '9004',
+              data: { nickname: this.currentNickname }
+            }));
+          }, 100);
+        }
+      };
+      
+      this.signalingServer.onmessage = ({ data: responseStr }) => {
+        const response = JSON.parse(responseStr);
+        const { type, data } = response;
+        
+        if (type === '1001') {
+          this.me.id = data.id;
+          this.me.roomId = data.roomId;
+          
+          if (this.currentMode === 'private' && this.privateRoomId && this.me.roomId !== this.privateRoomId) {
+            this.addSystemMessage('房间密码错误，请重新输入');
+            this.disconnectSignaling();
+            this.showPasswordModal = true;
+            this.passwordInput = '';
+            return;
+          }
+          
+          this.applyIceServers(data.turns);
+          return;
+        }
+        
+        if (type === '1002') {
+          this.refreshUsers(data);
+          return;
+        }
+        
+        if (type === '1003') {
+          this.connectAllOther();
+          return;
+        }
+        
+        if (type === '1004') {
+          this.addCandidate(data);
+          return;
+        }
+        
+        if (type === '1005') {
+          this.joinConnection(data);
+          return;
+        }
+        
+        if (type === '1006') {
+          this.joinedConnection(data);
+          return;
+        }
+        
+        if (type === '1007') {
+          const user = this.users.find(u => u.id === data.id);
+          if (user) {
+            user.nickname = data.nickname;
+          }
+          return;
+        }
+        
+        if (type === '1099') {
+          this.handleServerError(data);
+          return;
+        }
+      };
+      
+      this.signalingServer.onclose = () => {
+        this.clearKeepalive();
+        if (this.currentMode === 'public') {
+          this.loadPublicRooms();
+        }
+      };
+      
+      this.signalingServer.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    },
+    
+    getCurrentWsUrl() {
+      const wsBase = wsUrl.replace(/\/$/g, '');
+      if (this.currentMode === 'public') {
+        if (!this.currentPublicRoomId) {
+          return null;
+        }
+        return `${wsBase}/public/${encodeURIComponent(this.currentPublicRoomId)}`;
+      }
+      if (this.currentMode === 'private') {
+        return `${wsBase}/${encodeURIComponent(this.privateRoomId)}${this.roomPassword ? '/' + this.roomPassword : ''}`;
+      }
+      return `${wsBase}/`;
+    },
+    
+    disconnectSignaling() {
+      this.clearKeepalive();
+      if (this.signalingServer) {
+        try {
+          this.signalingServer.close();
+        } catch {}
+      }
+      this.signalingServer = null;
+      this.users.forEach(u => u.closeConnection && u.closeConnection());
+      this.users = [];
+    },
+    
+    clearKeepalive() {
+      if (this.keepaliveTimer) {
+        clearInterval(this.keepaliveTimer);
+        this.keepaliveTimer = null;
+      }
+    },
+    
+    applyIceServers(turns) {
+      window.fgdx_configuration.iceServers = JSON.parse(JSON.stringify(this.baseIceServers));
+      if (this.currentMode === 'private' && Array.isArray(turns) && turns.length > 0) {
+        turns.forEach(turn => {
+          window.fgdx_configuration.iceServers.push(turn);
+        });
+      }
+    },
+    
+    // 模式切换
+    switchMode(mode) {
+      if (mode === 'lan') {
+        this.switchToLanMode();
+      } else if (mode === 'public') {
+        this.switchToPublicMode();
+      }
+    },
+    
+    async switchToLanMode() {
+      if (this.publicRoomsRefreshTimer) {
+        clearInterval(this.publicRoomsRefreshTimer);
+        this.publicRoomsRefreshTimer = null;
+      }
+      this.currentPublicRoomId = null;
+      this.currentMode = 'lan';
+      this.applyIceServers([]);
+      this.disconnectSignaling();
+      this.connectWebSocket();
+    },
+    
+    async switchToPublicMode() {
+      this.currentMode = 'public';
+      this.applyIceServers([]);
+      this.disconnectSignaling();
+      await this.loadPublicRooms();
+      
+      if (this.publicRoomsRefreshTimer) {
+        clearInterval(this.publicRoomsRefreshTimer);
+      }
+      this.publicRoomsRefreshTimer = setInterval(() => {
+        this.loadPublicRooms();
+      }, 10000);
+    },
+    
+    // 公共房间
+    async loadPublicRooms() {
+      try {
+        const response = await fetch('/api/public-rooms', { cache: 'no-store' });
+        const data = await response.json();
+        this.publicRooms = data.rooms || [];
+        this.roomHintText = `公共房间最多 ${data.maxRooms} 个，剩余可新建：${data.availableSlots}`;
+      } catch (error) {
+        console.error('Failed to load public rooms:', error);
+        this.roomHintText = '获取公共房间失败';
+      }
+    },
+    
+    sanitizePublicRoomName(name) {
+      return (name || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').substring(0, 32);
+    },
+    
+    async createAndJoinRoom() {
+      const roomName = this.sanitizePublicRoomName(this.newRoomName);
+      if (!roomName) {
+        alert('请输入合法房间名（字母、数字、_、-）');
+        return;
+      }
+      this.newRoomName = roomName;
+      await this.joinRoom(roomName);
+    },
+    
+    async joinRoom(roomId) {
+      const normalizedRoomId = this.sanitizePublicRoomName(roomId);
+      if (!normalizedRoomId) {
+        alert('房间名不合法');
+        return;
+      }
+      this.currentPublicRoomId = normalizedRoomId;
+      this.currentMode = 'public';
+      this.disconnectSignaling();
+      this.connectWebSocket();
+      await this.loadPublicRooms();
+    },
+    
+    // 用户管理
+    refreshUsers(data) {
+      const resUsers = data.map(u => {
+        let uOld = this.users.find(uOld => uOld.id === u.id);
+        if (uOld) {
+          u.nickname = u.nickname || uOld.nickname;
+          return uOld;
+        }
+        
+        let xchatUser = new XChatUser();
+        xchatUser.id = u.id;
+        xchatUser.isMe = u.id === this.me.id;
+        xchatUser.nickname = u.nickname;
+        
+        xchatUser.onmessage = (msg) => {
+          this.addChatMessage(xchatUser.id, msg, xchatUser.nickname);
         };
         
-        await user.sendFile(fileInfo, pendingFile, onProgress);
+        xchatUser.onReviceFile = (file) => {
+          this.addFileMessage(xchatUser.id, file, xchatUser.nickname);
+        };
+        
+        xchatUser.onConnectionStateChange = () => {
+          this.$forceUpdate();
+        };
+        
+        return xchatUser;
+      });
+      
+      const delUsers = this.users.filter(u => !resUsers.find(u2 => u2.id === u.id));
+      delUsers.forEach(u => {
+        u.closeConnection && u.closeConnection();
+      });
+      
+      this.users = resUsers;
+    },
+    
+    connectAllOther() {
+      if (this.users.length <= 1) {
+        return;
+      }
+      const targets = this.users.filter(u => u.id !== this.me.id);
+      for (const target of targets) {
+        target.onicecandidate = (candidate) => {
+          this.signalingServer.send(JSON.stringify({
+            uid: this.me.id,
+            targetId: target.id,
+            type: '9001',
+            data: { candidate }
+          }));
+        };
+        target.createConnection().then(() => {
+          this.signalingServer.send(JSON.stringify({
+            uid: this.me.id,
+            targetId: target.id,
+            type: '9002',
+            data: { targetAddr: target.connAddressMe }
+          }));
+        });
+      }
+    },
+    
+    addCandidate(data) {
+      const target = this.users.find(u => u.id === data.targetId);
+      if (!target) return;
+      target.addIceCandidate(data.candidate);
+    },
+    
+    async joinConnection(data) {
+      const user = this.users.find(u => u.id === data.targetId);
+      if (!user) return;
+      
+      user.onicecandidate = (candidate) => {
+        this.signalingServer.send(JSON.stringify({
+          uid: this.me.id,
+          targetId: user.id,
+          type: '9001',
+          data: { candidate }
+        }));
+      };
+      
+      try {
+        await user.connectTarget(data.offer.sdp);
+        this.signalingServer.send(JSON.stringify({
+          uid: this.me.id,
+          targetId: user.id,
+          type: '9003',
+          data: { targetAddr: user.connAddressMe }
+        }));
+      } catch (error) {
+        console.error('joinConnection failed:', error);
+      }
+    },
+    
+    async joinedConnection(data) {
+      const target = this.users.find(u => u.id === data.targetId);
+      if (!target) return;
+      
+      try {
+        await target.setRemoteSdp(data.answer.sdp);
+      } catch (error) {
+        console.error('joinedConnection failed:', error);
+      }
+    },
+    
+    handleServerError(data) {
+      const message = data?.message || '服务端返回错误';
+      this.addSystemMessage(message);
+      if (data?.code === 'PUBLIC_ROOM_LIMIT') {
+        this.currentPublicRoomId = null;
+        this.loadPublicRooms();
+      }
+    },
+    
+    // 消息处理
+    addSystemMessage(content) {
+      this.messages.push({
+        type: 'system',
+        userName: '系统',
+        content: this.escapeHtml(content),
+        time: this.formatTime(new Date()),
+        isMe: false
+      });
+      this.$nextTick(() => {
+        this.scrollToBottom();
+      });
+    },
+    
+    addChatMessage(userId, content, nickname) {
+      // 过滤系统控制消息
+      if (typeof content === 'string' && content.startsWith('##')) {
+        return;
+      }
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed.type && parsed.type.startsWith('##')) {
+          return;
+        }
+      } catch {}
+      
+      let msg = this.escapeHtml(content);
+      // 转换URL为链接
+      if (/(http|https):\/\/[^\s<>"']+/g.test(msg)) {
+        msg = msg.replace(/(http|https):\/\/[^\s<>"']+/g, (url) => {
+          return `<a href="${url}" target="_blank">${url}</a>`;
+        });
       }
       
-      // 使用昵称显示在聊天记录中
-      const displayNames = selectedUsers.map(u => u.nickname || u.id).join(', ');
-      addChatItem(me.id, `[文件] ${fileInfo.name} (发送给: ${displayNames})`);
-    } catch (error) {
-      console.error('发送文件失败:', error);
-      alert('发送文件失败，请重试');
-    } finally {
-      sendButton.disabled = false;
-      sendButton.textContent = '发送';
-      userList.style.display = 'block';
-      progressContainer.style.display = 'none';
-      progressBar.style.width = '0%';
-    }
-  }
-  
-  modal.style.display = 'none';
-  pendingFile = null;
-}
-
-
-let droptarget = document.body;
+      this.messages.push({
+        type: 'text',
+        userName: userId === this.me.id ? '我' : (nickname || userId),
+        content: msg,
+        time: this.formatTime(new Date()),
+        isMe: userId === this.me.id
+      });
+      
+      this.$nextTick(() => {
+        this.scrollToBottom();
+      });
+    },
     
-async function handleEvent(event) {
-  event.preventDefault();
-  if (event.type === 'drop') {
-    droptarget.classList.remove('dragover');
-    if (event.dataTransfer.files.length > 0) {
-      await sendFile(event.dataTransfer.files[0]);
-    }
-  } else if (event.type === 'dragleave') {
-    droptarget.classList.remove('dragover');
-  } else {
-    droptarget.classList.add('dragover');
-  }
-}
-
-droptarget.addEventListener("dragenter", handleEvent);
-droptarget.addEventListener("dragover", handleEvent);
-droptarget.addEventListener("drop", handleEvent);
-droptarget.addEventListener("dragleave", handleEvent);
-
-document.querySelector('.file-btn').addEventListener('click', async () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.onchange = async (e) => {
-    if (e.target.files.length > 0) {
-      await sendFile(e.target.files[0]);
-    }
-  };
-  input.click();
-});
-
-document.querySelector('.send-btn').addEventListener('click', () => {
-  if (messageInput.value.trim()) {  // 只有当消息不为空时才发送
-    sendMessage();
-  }
-});
-
-function showNicknameModal() {
-  const modal = document.getElementById('nicknameModal');
-  const input = document.getElementById('nicknameInput');
-  input.value = currentNickname.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-  modal.style.display = 'block';
-  
-  // 自动获取焦点
-  setTimeout(() => input.focus(), 0);
-  
-  // 添加回车事件监听
-  input.onkeydown = (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // 阻止默认的回车行为
-      saveNickname();
-    }
-  };
-}
-
-function closeNicknameModal() {
-  const modal = document.getElementById('nicknameModal');
-  const input = document.getElementById('nicknameInput');
-  modal.style.display = 'none';
-  
-  // 清除回车事件监听
-  input.onkeydown = null;
-}
-
-function saveNickname() {
-  const input = document.getElementById('nicknameInput');
-  let nickname = input.value.trim();
-  
-  if (nickname) {
-    nickname = nickname.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    currentNickname = nickname;
-    document.cookie = `nickname=${encodeURIComponent(nickname)}; path=/; max-age=31536000`; // 保存一年
+    addFileMessage(userId, file, nickname) {
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+      
+      this.messages.push({
+        type: isImage ? 'image' : 'file',
+        userName: userId === this.me.id ? '我' : (nickname || userId),
+        fileName: file.name,
+        fileUrl: file.url,
+        time: this.formatTime(new Date()),
+        isMe: userId === this.me.id
+      });
+      
+      this.$nextTick(() => {
+        this.scrollToBottom();
+      });
+    },
     
-    // 更新本地显示
-    const user = users.find(u => u.id === me.id);
-    if (user) {
-      user.nickname = nickname;
-      refreshUsersHTML();
-    }
+    sendMessage() {
+      if (!this.messageInput.trim()) return;
+      
+      const message = this.messageInput;
+      this.addChatMessage(this.me.id, message, this.currentNickname);
+      
+      this.users.forEach(u => {
+        if (u.isMe || !u.isConnected()) return;
+        u.sendMessage(message).catch(() => {});
+      });
+      
+      this.messageInput = '';
+    },
     
-    // 发送到服务器
-    signalingServer.send(JSON.stringify({
-      uid: me.id,
-      targetId: me.id,
-      type: '9004',
-      data: { nickname }
-    }));
-  }
-  
-  closeNicknameModal();
-}
-
-// ... 添加昵称按钮事件监听
-document.querySelector('.nickname-btn').addEventListener('click', showNicknameModal);
-
-function toggleUsersList() {
-  document.body.classList.toggle('show-users');
-}
-
-// Add event listener for toggle button and overlay
-document.addEventListener('DOMContentLoaded', function() {
-  const toggleBtn = document.querySelector('.toggle-users-btn');
-  const overlay = document.querySelector('.mobile-overlay');
-  
-  toggleBtn.addEventListener('click', toggleUsersList);
-  overlay.addEventListener('click', toggleUsersList);
-
-  // Hide users list by default on mobile
-  if (window.innerWidth <= 768) {
-    document.body.classList.remove('show-users');
-  }
-
-  // 添加粘贴事件监听
-  document.addEventListener('paste', async (event) => {
-    const items = event.clipboardData?.items;
-    if (!items) return;
-
-    for (const item of items) {
-      if (item.type.indexOf('image') !== -1) {
-        event.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          // 创建一个新的 File 对象，确保有正确的文件名
-          const imageFile = new File([file], `pasted-image-${Date.now()}.png`, {
-            type: 'image/png'
-          });
-          await sendFile(imageFile);
+    // 文件处理
+    selectFile() {
+      this.$refs.fileInput.click();
+    },
+    
+    handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.handleFileUpload(file);
+      }
+      event.target.value = '';
+    },
+    
+    async handleFileUpload(file) {
+      const otherUsers = this.users.filter(u => !u.isMe && u.isConnected());
+      
+      if (otherUsers.length === 0) {
+        alert('没有可用的接收用户');
+        return;
+      }
+      
+      if (otherUsers.length === 1) {
+        await this.sendFileToUser(otherUsers[0], file);
+      } else {
+        // 多个用户时显示选择对话框（简化版本，直接发送给所有人）
+        for (const user of otherUsers) {
+          await this.sendFileToUser(user, file);
         }
-        break;
+      }
+    },
+    
+    async sendFileToUser(user, file) {
+      try {
+        const fileInfo = { name: file.name, size: file.size };
+        await user.sendFile(fileInfo, file, (sent, total) => {
+          // 可以在这里更新进度
+          console.log(`Progress: ${(sent / total * 100).toFixed(2)}%`);
+        });
+        
+        const displayName = user.nickname || user.id;
+        this.addChatMessage(this.me.id, `[文件] ${fileInfo.name} (发送给: ${displayName})`, this.currentNickname);
+      } catch (error) {
+        console.error('发送文件失败:', error);
+        alert('发送文件失败，请重试');
+      }
+    },
+    
+    // 昵称设置
+    saveNickname() {
+      if (!this.nicknameInput.trim()) {
+        alert('请输入昵称');
+        return;
+      }
+      
+      this.currentNickname = this.nicknameInput.trim();
+      document.cookie = `nickname=${encodeURIComponent(this.currentNickname)}; max-age=31536000; path=/`;
+      
+      if (this.signalingServer && this.signalingServer.readyState === WebSocket.OPEN) {
+        this.signalingServer.send(JSON.stringify({
+          uid: this.me.id,
+          targetId: this.me.id,
+          type: '9004',
+          data: { nickname: this.currentNickname }
+        }));
+      }
+      
+      this.showNicknameModal = false;
+    },
+    
+    // 密码提交
+    submitPassword() {
+      if (!this.passwordInput) {
+        alert('请输入密码');
+        return;
+      }
+      
+      this.roomPassword = MD5(this.passwordInput);
+      this.currentMode = 'private';
+      this.showPasswordModal = false;
+      this.connectWebSocket();
+    },
+    
+    // 图片预览
+    previewImage(url, name) {
+      const previewWindow = window.open('', '_blank');
+      if (previewWindow) {
+        previewWindow.document.write(`
+          <html>
+            <head>
+              <title>${name}</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 20px;
+                  background: #0f172a;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  min-height: 100vh;
+                }
+                img {
+                  max-width: 100%;
+                  max-height: 90vh;
+                  object-fit: contain;
+                  border-radius: 8px;
+                }
+              </style>
+            </head>
+            <body>
+              <img src="${url}" alt="${name}" />
+            </body>
+          </html>
+        `);
+        previewWindow.document.close();
+      }
+    },
+    
+    // 工具函数
+    escapeHtml(text) {
+      return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    },
+    
+    formatTime(date) {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    },
+    
+    scrollToBottom() {
+      const container = this.$refs.messagesContainer;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
       }
     }
-  });
-});
+  },
+  
+  watch: {
+    users: {
+      handler() {
+        // 更新用户显示信息
+        this.users.forEach(user => {
+          user.displayName = user.isMe ? '我' : (user.nickname || user.id);
+          user.connected = user.isConnected ? user.isConnected() : false;
+          user.connectionState = user.getConnectionState ? user.getConnectionState() : 'disconnected';
+          user.statusText = user.connected ? '已连接' : '未连接';
+        });
+      },
+      deep: true
+    }
+  }
+}).mount('#app');

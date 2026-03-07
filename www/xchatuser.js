@@ -36,6 +36,7 @@ class XChatUser {
   connAddressMe = null;
   chatChannel = null;
   candidateArr = [];
+  pendingRemoteCandidates = [];
 
   onicecandidate = () => { };
   onmessage = () => { };
@@ -148,6 +149,7 @@ class XChatUser {
     this.chatChannel = null;
     this.connAddressTarget = null;
     this.connAddressMe = null;
+    this.pendingRemoteCandidates = [];
     this.onicecandidate = () => { };
     this.onConnectionStateChange(CONNECTION_STATES.CLOSED);
   }
@@ -183,6 +185,7 @@ class XChatUser {
     
     this.connAddressMe = await this.rtcConn.createAnswer();
     this.rtcConn.setLocalDescription(this.connAddressMe);
+    await this.flushPendingRemoteCandidates();
 
     if (this.rtcConn.connectionState) {
       this.rtcConn.onconnectionstatechange = () => {
@@ -207,7 +210,7 @@ class XChatUser {
     if (!this.rtcConn) {
       return null;
     }
-    if (this.rtcConn.connectionstate) {
+    if (this.rtcConn.connectionState) {
       return this.rtcConn.connectionState;
     } else {
       let firefoxConnectionState = 'new';
@@ -232,20 +235,24 @@ class XChatUser {
   }
 
   addIceCandidate(candidate) {
-    if (!this.rtcConn) {
+    if (!candidate) {
       return;
     }
-    this.rtcConn.addIceCandidate(new RTCIceCandidate(candidate))
+    if (!this.rtcConn) {
+      this.pendingRemoteCandidates.push(candidate);
+      return;
+    }
+    this.rtcConn.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {
+      this.pendingRemoteCandidates.push(candidate);
+    });
   }
 
   async setRemoteSdp(target) {
     if (this.rtcConn.signalingState === 'have-local-offer' && !this.rtcConn.remoteDescription) {
-      // console.log('setRemoteDescription', target);
       try {
-
-        this.rtcConn.setRemoteDescription({ type: 'answer', sdp: target})
-        .then(() => console.log('Remote SDP set as answer.'))
-        .catch(err => console.error('Error handling answer SDP:', err));
+        await this.rtcConn.setRemoteDescription({ type: 'answer', sdp: target});
+        await this.flushPendingRemoteCandidates();
+        console.log('Remote SDP set as answer.');
       } catch (err) {
         console.error('Error handling answer SDP:', err);
       }
@@ -372,8 +379,14 @@ class XChatUser {
       }
     };
 
-    this.chatChannel.onopen = () => console.log('chatChannel is open');
-    this.chatChannel.onclose = () => console.log('DataChannel is closed');
+    this.chatChannel.onopen = () => {
+      console.log('chatChannel is open');
+      this.onConnectionStateChange(this.getConnectionState());
+    };
+    this.chatChannel.onclose = () => {
+      console.log('DataChannel is closed');
+      this.onConnectionStateChange(this.getConnectionState());
+    };
   }
   checkBufferedAmount() {
     const maxBufferedAmount = 1024 * 64; // 降低最大缓冲区限制到 64KB
@@ -578,28 +591,30 @@ class XChatUser {
     }
   }
 
-  // 获取当前连接状态
-  getConnectionState() {
-    if (!this.rtcConn) {
-      return CONNECTION_STATES.DISCONNECTED;
-    }
-    return this.rtcConn.connectionState;
+  // 检查是否已连接
+  isDataChannelOpen() {
+    return !!(this.chatChannel && this.chatChannel.readyState === 'open');
   }
 
-  // 检查是否已连接
   isConnected() {
-    if (!this.rtcConn) {
-      return false;
+    const state = this.getConnectionState();
+    const transportConnected = state === 'connected' || state === 'completed';
+    return transportConnected && this.isDataChannelOpen();
+  }
+
+  async flushPendingRemoteCandidates() {
+    if (!this.rtcConn || this.pendingRemoteCandidates.length === 0) {
+      return;
     }
-    if (this.rtcConn.connectionState) {
-      return this.rtcConn.connectionState === 'connected';
-    }
-    if (this.rtcConn.iceConnectionState === 'connected' || this.rtcConn.iceConnectionState === 'completed') {
-      if (this.rtcConn.signalingState === 'stable') {
-        return true;
+    const pending = [...this.pendingRemoteCandidates];
+    this.pendingRemoteCandidates = [];
+    for (const candidate of pending) {
+      try {
+        await this.rtcConn.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (error) {
+        console.error('Failed to apply pending ICE candidate:', error);
       }
     }
-    return false;
   }
 
 
