@@ -1,4 +1,4 @@
-# 发个东西
+# LinkDrop
 一个局域网文字/文件P2P传输工具
 > 项目中仅在线用户列表和WebRTC信令迫不得已需要一个轻量化的服务，其他数据传输都采用了基于WebRTC的点对点传输，不经过中间服务器，所以局域网内互传一些文字/文件都比较快。
 
@@ -55,7 +55,7 @@ demo演示：https://fagedongxi.com
 * 原因一：浏览器不支持WebRTC（目前最新版已经在用户打开后自动检测并加入提示），旧版没有检测功能可以临时用这个进行测试：https://space.coze.cn/s/qDNpw1y7MJw/
 * 原因二：网络环境不支持互相访问，详见：https://v.douyin.com/IPoHlTBzngg/
   > 解决方案：
-  >  1. 私有部署「发个东西」+「TURN中转服务coturn」
+  >  1. 私有部署「LinkDrop」+「TURN中转服务coturn」
   >  2. 配置房间增加TURN支持（ `.room_pwd.json` 样例文件中有TURN的配置格式）
 
 ## 视频通话

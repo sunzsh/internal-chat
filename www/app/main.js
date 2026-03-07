@@ -29,6 +29,7 @@
       const networkWidgetRef = ref(null);
       const messagesContainer = ref(null);
       const fileInput = ref(null);
+      const activeFileTransfer = ref(null);
       let userStateTimer = null;
       let speedTimer = null;
       let outsideClickHandler = null;
@@ -360,24 +361,84 @@
           chatStore.showToast({ type: 'warning', message: '没有可用的接收用户' });
           return;
         }
+        let sentSuccess = 0;
+        let localPreviewAdded = false;
         for (const user of targetUsers) {
-          await sendFileToUser(user, file);
+          const ok = await sendFileToUser(user, file);
+          if (ok) {
+            sentSuccess += 1;
+            if (!localPreviewAdded) {
+              const localUrl = URL.createObjectURL(file);
+              chatStore.addFileMessage(userStore.me.id, { name: file.name, url: localUrl }, appStore.nickname);
+              localPreviewAdded = true;
+            }
+          }
+        }
+        if (sentSuccess === 0) {
+          chatStore.showToast({ type: 'error', message: '文件发送失败' });
+        } else if (sentSuccess < targetUsers.length) {
+          chatStore.showToast({ type: 'warning', message: `部分发送成功（${sentSuccess}/${targetUsers.length}）` });
         }
       }
 
       async function sendFileToUser(user, file) {
         const target = unwrapUser(user);
+        const displayName = target.nickname || target.id;
+        const totalBytes = file.size || 0;
+        activeFileTransfer.value = {
+          fileName: file.name,
+          targetName: displayName,
+          progress: 0,
+          sentText: formatBytes(0),
+          totalText: formatBytes(totalBytes),
+          status: 'sending'
+        };
         try {
           const fileInfo = { name: file.name, size: file.size };
-          await target.sendFile(fileInfo, file, () => {
+          await target.sendFile(fileInfo, file, (sent, total) => {
+            const safeTotal = total || totalBytes || 1;
+            const percent = Math.max(0, Math.min(100, Math.round((sent / safeTotal) * 100)));
+            activeFileTransfer.value = {
+              fileName: file.name,
+              targetName: displayName,
+              progress: percent,
+              sentText: formatBytes(sent),
+              totalText: formatBytes(total || totalBytes),
+              status: 'sending'
+            };
           });
-          const displayName = target.nickname || target.id;
-          chatStore.addChatMessage(userStore.me.id, `[文件] ${fileInfo.name} (发送给: ${displayName})`, appStore.nickname);
+          activeFileTransfer.value = {
+            fileName: file.name,
+            targetName: displayName,
+            progress: 100,
+            sentText: formatBytes(totalBytes),
+            totalText: formatBytes(totalBytes),
+            status: 'success'
+          };
           chatStore.showToast({ type: 'success', message: `文件已发送给 ${displayName}` });
+          setTimeout(() => {
+            if (activeFileTransfer.value && activeFileTransfer.value.targetName === displayName) {
+              activeFileTransfer.value = null;
+            }
+          }, 1200);
+          return true;
         } catch (error) {
-          const displayName = target.nickname || target.id;
           const reason = error && error.message ? error.message : '未知错误';
+          activeFileTransfer.value = {
+            fileName: file.name,
+            targetName: displayName,
+            progress: 0,
+            sentText: formatBytes(0),
+            totalText: formatBytes(totalBytes),
+            status: 'failed'
+          };
           chatStore.showToast({ type: 'error', message: `发送给 ${displayName} 失败：${reason}` });
+          setTimeout(() => {
+            if (activeFileTransfer.value && activeFileTransfer.value.targetName === displayName) {
+              activeFileTransfer.value = null;
+            }
+          }, 2000);
+          return false;
         }
       }
 
@@ -477,6 +538,20 @@
         const m = date.getMinutes().toString().padStart(2, '0');
         const s = date.getSeconds().toString().padStart(2, '0');
         return `${h}:${m}:${s}`;
+      }
+
+      function formatBytes(bytes) {
+        const value = Math.max(0, Number(bytes) || 0);
+        if (value >= 1024 * 1024 * 1024) {
+          return `${(value / (1024 * 1024 * 1024)).toFixed(2)}GB`;
+        }
+        if (value >= 1024 * 1024) {
+          return `${(value / (1024 * 1024)).toFixed(2)}MB`;
+        }
+        if (value >= 1024) {
+          return `${(value / 1024).toFixed(2)}KB`;
+        }
+        return `${value.toFixed(0)}B`;
       }
 
       async function manualSpeedTest() {
@@ -613,6 +688,7 @@
         networkWidgetRef,
         messagesContainer,
         fileInput,
+        activeFileTransfer,
         currentMode,
         connectionStatus,
         connectionStatusClass,
