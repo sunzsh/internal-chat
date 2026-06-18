@@ -6,7 +6,7 @@ const CONNECTION_STATES = {
   CLOSED: 'closed'
 };
 
-connOption = 
+const connOption = 
 { 
   ordered: true, 
   maxRetransmits: 10, // 最大重传次数
